@@ -1374,6 +1374,514 @@ class CollectionStatusesCompanion extends UpdateCompanion<CollectionStatuse> {
   }
 }
 
+class $SyncQueueItemsTable extends SyncQueueItems
+    with TableInfo<$SyncQueueItemsTable, SyncQueueItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncQueueItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _stickerIdMeta = const VerificationMeta(
+    'stickerId',
+  );
+  @override
+  late final GeneratedColumn<String> stickerId = GeneratedColumn<String>(
+    'sticker_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationMeta = const VerificationMeta(
+    'operation',
+  );
+  @override
+  late final GeneratedColumn<String> operation = GeneratedColumn<String>(
+    'operation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _retryCountMeta = const VerificationMeta(
+    'retryCount',
+  );
+  @override
+  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _processedAtMeta = const VerificationMeta(
+    'processedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> processedAt = GeneratedColumn<DateTime>(
+    'processed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    stickerId,
+    operation,
+    payload,
+    retryCount,
+    status,
+    createdAt,
+    processedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_queue_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncQueueItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sticker_id')) {
+      context.handle(
+        _stickerIdMeta,
+        stickerId.isAcceptableOrUnknown(data['sticker_id']!, _stickerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stickerIdMeta);
+    }
+    if (data.containsKey('operation')) {
+      context.handle(
+        _operationMeta,
+        operation.isAcceptableOrUnknown(data['operation']!, _operationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_operationMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('retry_count')) {
+      context.handle(
+        _retryCountMeta,
+        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('processed_at')) {
+      context.handle(
+        _processedAtMeta,
+        processedAt.isAcceptableOrUnknown(
+          data['processed_at']!,
+          _processedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id},
+  ];
+  @override
+  SyncQueueItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncQueueItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      stickerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sticker_id'],
+      )!,
+      operation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      retryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retry_count'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      processedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}processed_at'],
+      ),
+    );
+  }
+
+  @override
+  $SyncQueueItemsTable createAlias(String alias) {
+    return $SyncQueueItemsTable(attachedDatabase, alias);
+  }
+}
+
+class SyncQueueItem extends DataClass implements Insertable<SyncQueueItem> {
+  final int id;
+  final String stickerId;
+  final String operation;
+  final String payload;
+  final int retryCount;
+  final String status;
+  final DateTime createdAt;
+  final DateTime? processedAt;
+  const SyncQueueItem({
+    required this.id,
+    required this.stickerId,
+    required this.operation,
+    required this.payload,
+    required this.retryCount,
+    required this.status,
+    required this.createdAt,
+    this.processedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['sticker_id'] = Variable<String>(stickerId);
+    map['operation'] = Variable<String>(operation);
+    map['payload'] = Variable<String>(payload);
+    map['retry_count'] = Variable<int>(retryCount);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || processedAt != null) {
+      map['processed_at'] = Variable<DateTime>(processedAt);
+    }
+    return map;
+  }
+
+  SyncQueueItemsCompanion toCompanion(bool nullToAbsent) {
+    return SyncQueueItemsCompanion(
+      id: Value(id),
+      stickerId: Value(stickerId),
+      operation: Value(operation),
+      payload: Value(payload),
+      retryCount: Value(retryCount),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      processedAt: processedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(processedAt),
+    );
+  }
+
+  factory SyncQueueItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncQueueItem(
+      id: serializer.fromJson<int>(json['id']),
+      stickerId: serializer.fromJson<String>(json['stickerId']),
+      operation: serializer.fromJson<String>(json['operation']),
+      payload: serializer.fromJson<String>(json['payload']),
+      retryCount: serializer.fromJson<int>(json['retryCount']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      processedAt: serializer.fromJson<DateTime?>(json['processedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'stickerId': serializer.toJson<String>(stickerId),
+      'operation': serializer.toJson<String>(operation),
+      'payload': serializer.toJson<String>(payload),
+      'retryCount': serializer.toJson<int>(retryCount),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'processedAt': serializer.toJson<DateTime?>(processedAt),
+    };
+  }
+
+  SyncQueueItem copyWith({
+    int? id,
+    String? stickerId,
+    String? operation,
+    String? payload,
+    int? retryCount,
+    String? status,
+    DateTime? createdAt,
+    Value<DateTime?> processedAt = const Value.absent(),
+  }) => SyncQueueItem(
+    id: id ?? this.id,
+    stickerId: stickerId ?? this.stickerId,
+    operation: operation ?? this.operation,
+    payload: payload ?? this.payload,
+    retryCount: retryCount ?? this.retryCount,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    processedAt: processedAt.present ? processedAt.value : this.processedAt,
+  );
+  SyncQueueItem copyWithCompanion(SyncQueueItemsCompanion data) {
+    return SyncQueueItem(
+      id: data.id.present ? data.id.value : this.id,
+      stickerId: data.stickerId.present ? data.stickerId.value : this.stickerId,
+      operation: data.operation.present ? data.operation.value : this.operation,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      retryCount: data.retryCount.present
+          ? data.retryCount.value
+          : this.retryCount,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      processedAt: data.processedAt.present
+          ? data.processedAt.value
+          : this.processedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncQueueItem(')
+          ..write('id: $id, ')
+          ..write('stickerId: $stickerId, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('processedAt: $processedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    stickerId,
+    operation,
+    payload,
+    retryCount,
+    status,
+    createdAt,
+    processedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncQueueItem &&
+          other.id == this.id &&
+          other.stickerId == this.stickerId &&
+          other.operation == this.operation &&
+          other.payload == this.payload &&
+          other.retryCount == this.retryCount &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.processedAt == this.processedAt);
+}
+
+class SyncQueueItemsCompanion extends UpdateCompanion<SyncQueueItem> {
+  final Value<int> id;
+  final Value<String> stickerId;
+  final Value<String> operation;
+  final Value<String> payload;
+  final Value<int> retryCount;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> processedAt;
+  const SyncQueueItemsCompanion({
+    this.id = const Value.absent(),
+    this.stickerId = const Value.absent(),
+    this.operation = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.retryCount = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.processedAt = const Value.absent(),
+  });
+  SyncQueueItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required String stickerId,
+    required String operation,
+    required String payload,
+    this.retryCount = const Value.absent(),
+    this.status = const Value.absent(),
+    required DateTime createdAt,
+    this.processedAt = const Value.absent(),
+  }) : stickerId = Value(stickerId),
+       operation = Value(operation),
+       payload = Value(payload),
+       createdAt = Value(createdAt);
+  static Insertable<SyncQueueItem> custom({
+    Expression<int>? id,
+    Expression<String>? stickerId,
+    Expression<String>? operation,
+    Expression<String>? payload,
+    Expression<int>? retryCount,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? processedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (stickerId != null) 'sticker_id': stickerId,
+      if (operation != null) 'operation': operation,
+      if (payload != null) 'payload': payload,
+      if (retryCount != null) 'retry_count': retryCount,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (processedAt != null) 'processed_at': processedAt,
+    });
+  }
+
+  SyncQueueItemsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? stickerId,
+    Value<String>? operation,
+    Value<String>? payload,
+    Value<int>? retryCount,
+    Value<String>? status,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? processedAt,
+  }) {
+    return SyncQueueItemsCompanion(
+      id: id ?? this.id,
+      stickerId: stickerId ?? this.stickerId,
+      operation: operation ?? this.operation,
+      payload: payload ?? this.payload,
+      retryCount: retryCount ?? this.retryCount,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      processedAt: processedAt ?? this.processedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (stickerId.present) {
+      map['sticker_id'] = Variable<String>(stickerId.value);
+    }
+    if (operation.present) {
+      map['operation'] = Variable<String>(operation.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (retryCount.present) {
+      map['retry_count'] = Variable<int>(retryCount.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (processedAt.present) {
+      map['processed_at'] = Variable<DateTime>(processedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncQueueItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('stickerId: $stickerId, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('processedAt: $processedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1382,6 +1890,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StickersTable stickers = $StickersTable(this);
   late final $CollectionStatusesTable collectionStatuses =
       $CollectionStatusesTable(this);
+  late final $SyncQueueItemsTable syncQueueItems = $SyncQueueItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1391,6 +1900,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sections,
     stickers,
     collectionStatuses,
+    syncQueueItems,
   ];
 }
 
@@ -2154,6 +2664,263 @@ typedef $$CollectionStatusesTableProcessedTableManager =
       CollectionStatuse,
       PrefetchHooks Function()
     >;
+typedef $$SyncQueueItemsTableCreateCompanionBuilder =
+    SyncQueueItemsCompanion Function({
+      Value<int> id,
+      required String stickerId,
+      required String operation,
+      required String payload,
+      Value<int> retryCount,
+      Value<String> status,
+      required DateTime createdAt,
+      Value<DateTime?> processedAt,
+    });
+typedef $$SyncQueueItemsTableUpdateCompanionBuilder =
+    SyncQueueItemsCompanion Function({
+      Value<int> id,
+      Value<String> stickerId,
+      Value<String> operation,
+      Value<String> payload,
+      Value<int> retryCount,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<DateTime?> processedAt,
+    });
+
+class $$SyncQueueItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncQueueItemsTable> {
+  $$SyncQueueItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stickerId => $composableBuilder(
+    column: $table.stickerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get processedAt => $composableBuilder(
+    column: $table.processedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncQueueItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncQueueItemsTable> {
+  $$SyncQueueItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stickerId => $composableBuilder(
+    column: $table.stickerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get processedAt => $composableBuilder(
+    column: $table.processedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncQueueItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncQueueItemsTable> {
+  $$SyncQueueItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get stickerId =>
+      $composableBuilder(column: $table.stickerId, builder: (column) => column);
+
+  GeneratedColumn<String> get operation =>
+      $composableBuilder(column: $table.operation, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get processedAt => $composableBuilder(
+    column: $table.processedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$SyncQueueItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncQueueItemsTable,
+          SyncQueueItem,
+          $$SyncQueueItemsTableFilterComposer,
+          $$SyncQueueItemsTableOrderingComposer,
+          $$SyncQueueItemsTableAnnotationComposer,
+          $$SyncQueueItemsTableCreateCompanionBuilder,
+          $$SyncQueueItemsTableUpdateCompanionBuilder,
+          (
+            SyncQueueItem,
+            BaseReferences<_$AppDatabase, $SyncQueueItemsTable, SyncQueueItem>,
+          ),
+          SyncQueueItem,
+          PrefetchHooks Function()
+        > {
+  $$SyncQueueItemsTableTableManager(
+    _$AppDatabase db,
+    $SyncQueueItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncQueueItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncQueueItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncQueueItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> stickerId = const Value.absent(),
+                Value<String> operation = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> processedAt = const Value.absent(),
+              }) => SyncQueueItemsCompanion(
+                id: id,
+                stickerId: stickerId,
+                operation: operation,
+                payload: payload,
+                retryCount: retryCount,
+                status: status,
+                createdAt: createdAt,
+                processedAt: processedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String stickerId,
+                required String operation,
+                required String payload,
+                Value<int> retryCount = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                required DateTime createdAt,
+                Value<DateTime?> processedAt = const Value.absent(),
+              }) => SyncQueueItemsCompanion.insert(
+                id: id,
+                stickerId: stickerId,
+                operation: operation,
+                payload: payload,
+                retryCount: retryCount,
+                status: status,
+                createdAt: createdAt,
+                processedAt: processedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncQueueItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncQueueItemsTable,
+      SyncQueueItem,
+      $$SyncQueueItemsTableFilterComposer,
+      $$SyncQueueItemsTableOrderingComposer,
+      $$SyncQueueItemsTableAnnotationComposer,
+      $$SyncQueueItemsTableCreateCompanionBuilder,
+      $$SyncQueueItemsTableUpdateCompanionBuilder,
+      (
+        SyncQueueItem,
+        BaseReferences<_$AppDatabase, $SyncQueueItemsTable, SyncQueueItem>,
+      ),
+      SyncQueueItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2166,4 +2933,6 @@ class $AppDatabaseManager {
       $$StickersTableTableManager(_db, _db.stickers);
   $$CollectionStatusesTableTableManager get collectionStatuses =>
       $$CollectionStatusesTableTableManager(_db, _db.collectionStatuses);
+  $$SyncQueueItemsTableTableManager get syncQueueItems =>
+      $$SyncQueueItemsTableTableManager(_db, _db.syncQueueItems);
 }

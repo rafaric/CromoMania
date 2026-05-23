@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "205808541889",
+    "project_id": "cromomania-2026",
+    "storage_bucket": "cromomania-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:205808541889:android:ef9323a575d14a9347b440",
+        "android_client_info": {
+          "package_name": "com.stickercollector.sticker_collector_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0fv_vNm9HI5uDdQyg7qE-nJItKI8Z2-U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

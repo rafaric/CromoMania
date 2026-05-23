@@ -7,11 +7,12 @@ import 'tables/albums_table.dart';
 import 'tables/sections_table.dart';
 import 'tables/stickers_table.dart';
 import 'tables/collection_status_table.dart';
+import 'tables/sync_queue_table.dart';
 
 part 'app_database.g.dart';
 
 /// Main application database using Drift
-@DriftDatabase(tables: [Albums, Sections, Stickers, CollectionStatuses])
+@DriftDatabase(tables: [Albums, Sections, Stickers, CollectionStatuses, SyncQueueItems])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -134,6 +135,58 @@ class AppDatabase extends _$AppDatabase {
         mode: InsertMode.insertOrIgnore,
       );
     });
+  }
+  // ============== Sync Queue Operations ==============
+
+  /// Insert a new sync queue item
+  Future<int> insertSyncQueueItem(SyncQueueItemsCompanion item) =>
+      into(syncQueueItems).insert(item);
+
+  /// Get all pending sync queue items (oldest first)
+  Future<List<SyncQueueItem>> getPendingSyncItems() =>
+      (select(syncQueueItems)
+            ..where((s) => s.status.equals('pending'))
+            ..orderBy([(s) => OrderingTerm.asc(s.createdAt)]))
+          .get();
+
+  /// Mark a sync item as processed
+  Future<bool> markSyncItemProcessed(int id) {
+    return (update(syncQueueItems)..where((s) => s.id.equals(id))).write(
+      SyncQueueItemsCompanion(
+        status: const Value('processed'),
+        processedAt: Value(DateTime.now()),
+      ),
+    ).then((rows) => rows > 0);
+  }
+
+  /// Increment retry count for a sync item
+  Future<bool> incrementSyncRetryCount(int id) {
+    return customStatement(
+      'UPDATE sync_queue_items SET retry_count = retry_count + 1 WHERE id = ?',
+      [id],
+    ).then((_) => true);
+  }
+
+  /// Mark a sync item as failed
+  Future<bool> markSyncItemFailed(int id) {
+    return (update(syncQueueItems)..where((s) => s.id.equals(id))).write(
+      const SyncQueueItemsCompanion(
+        status: Value('failed'),
+      ),
+    ).then((rows) => rows > 0);
+  }
+
+  /// Delete processed sync items (cleanup)
+  Future<int> deleteProcessedSyncItems() =>
+      (delete(syncQueueItems)..where((s) => s.status.equals('processed'))).go();
+
+  /// Get count of pending sync items
+  Future<int> getPendingSyncCount() async {
+    final result = await (selectOnly(syncQueueItems)
+          ..where(syncQueueItems.status.equals('pending'))
+          ..addColumns([syncQueueItems.id.count()]))
+        .getSingle();
+    return result.read(syncQueueItems.id.count()) ?? 0;
   }
 }
 

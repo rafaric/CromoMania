@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'auth/data/firebase_auth_service.dart';
+import 'auth/presentation/cubit/auth_cubit.dart';
+import 'auth/presentation/cubit/auth_state.dart';
+import 'auth/presentation/pages/auth_gate_page.dart';
+import 'connectivity/connectivity_service.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'database/app_database.dart';
@@ -22,13 +27,21 @@ import 'features/pdf_export/presentation/pages/pdf_export_page.dart';
 import 'features/stats/presentation/cubit/stats_cubit.dart';
 import 'features/stats/presentation/cubit/stats_state.dart';
 import 'features/stats/presentation/pages/stats_dashboard_page.dart';
+import 'profile/presentation/widgets/user_profile_drawer.dart';
+import 'sync/data/firestore_repository.dart';
+import 'sync/data/sync_queue_repository_impl.dart';
+import 'sync/presentation/cubit/sync_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Initialize Firebase (throws if not configured properly)
+  // Note: Firebase must be initialized before using any Firebase services
+  // For development, you need to run `flutterfire configure` or add your google-services.json
+
   // Initialize database
   final database = AppDatabase();
-  
+
   runApp(StickerCollectorApp(database: database));
 }
 
@@ -42,40 +55,145 @@ class StickerCollectorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize repositories
-    final albumDataSource = AlbumLocalDataSource(database);
-    final albumRepository = AlbumRepositoryImpl(albumDataSource);
-    final collectionRepository = CollectionRepositoryImpl(database);
-    
-    // Initialize PDF service
-    final pdfGenerator = PdfGenerator();
-    final pdfExportService = PdfExportService(pdfGenerator);
+    // Initialize services
+    final authService = FirebaseAuthService();
+    final firestoreRepo = FirestoreRepositoryImpl();
+    final syncQueueRepo = SyncQueueRepositoryImpl(database);
+    final connectivityService = ConnectivityService();
 
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider<AlbumCubit>(
-          create: (_) => AlbumCubit(albumRepository)..loadAlbums(),
-        ),
-        BlocProvider<CollectionCubit>(
-          create: (_) => CollectionCubit(collectionRepository)..loadCollection(),
-        ),
-        BlocProvider<StatsCubit>(
-          create: (_) => StatsCubit(),
-        ),
-        BlocProvider<PdfExportCubit>(
-          create: (_) => PdfExportCubit(pdfExportService),
-        ),
+        RepositoryProvider<AppDatabase>.value(value: database),
+        RepositoryProvider<FirebaseAuthService>.value(value: authService),
+        RepositoryProvider<FirestoreRepository>.value(value: firestoreRepo),
+        RepositoryProvider<SyncQueueRepositoryImpl>.value(value: syncQueueRepo),
+        RepositoryProvider<ConnectivityService>.value(value: connectivityService),
       ],
-      child: MaterialApp(
-        title: AppConstants.appName,
-        theme: AppTheme.lightTheme,
-        debugShowCheckedModeBanner: false,
-        home: const MainNavigationPage(),
+      child: MultiBlocProvider(
+        providers: [
+          // Auth cubit - handles authentication state
+          BlocProvider<AuthCubit>(
+            create: (context) => AuthCubit(authService),
+          ),
+          // Sync cubit - manages cloud sync
+          BlocProvider<SyncCubit>(
+            create: (context) => SyncCubit(
+              firestoreRepo: firestoreRepo,
+              syncQueueRepo: syncQueueRepo,
+            ),
+          ),
+          // Album cubit - manages albums
+          BlocProvider<AlbumCubit>(
+            create: (context) {
+              final albumDataSource = AlbumLocalDataSource(database);
+              final albumRepository = AlbumRepositoryImpl(albumDataSource);
+              return AlbumCubit(albumRepository)..loadAlbums();
+            },
+          ),
+          // Collection cubit - manages sticker collection
+          BlocProvider<CollectionCubit>(
+            create: (context) {
+              final collectionRepository = CollectionRepositoryImpl(database);
+              return CollectionCubit(collectionRepository)..loadCollection();
+            },
+          ),
+          // Stats cubit - calculates statistics
+          BlocProvider<StatsCubit>(
+            create: (_) => StatsCubit(),
+          ),
+          // PDF export cubit
+          BlocProvider<PdfExportCubit>(
+            create: (_) {
+              final pdfGenerator = PdfGenerator();
+              final pdfExportService = PdfExportService(pdfGenerator);
+              return PdfExportCubit(pdfExportService);
+            },
+          ),
+        ],
+        child: MaterialApp(
+          title: AppConstants.appName,
+          theme: AppTheme.lightTheme,
+          debugShowCheckedModeBanner: false,
+          home: const AuthGate(),
+        ),
       ),
     );
   }
 }
 
+/// Auth gate that shows appropriate screen based on auth state
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        // Show loading while determining auth state
+        if (state.status == AuthStateStatus.initial ||
+            state.status == AuthStateStatus.loading) {
+          return const _LoadingScreen();
+        }
+
+        // Show auth gate if not authenticated
+        if (state.status == AuthStateStatus.unauthenticated ||
+            state.status == AuthStateStatus.error) {
+          return const AuthGatePage();
+        }
+
+        // Authenticated - show main app
+        if (state.status == AuthStateStatus.authenticated) {
+          // Initialize sync for the authenticated user
+          context.read<SyncCubit>().initialize(state.userId ?? '');
+
+          return const MainNavigationPage();
+        }
+
+        return const _LoadingScreen();
+      },
+    );
+  }
+}
+
+/// Loading screen shown during auth check
+class _LoadingScreen extends StatelessWidget {
+  const _LoadingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.collections_bookmark,
+                size: 48,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'CromoManía 2026',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Main navigation with bottom nav bar
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});
 
@@ -89,6 +207,25 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('CromoManía 2026'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.account_circle),
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            ),
+          ),
+        ],
+      ),
+      drawer: const UserProfileDrawer(),
+      endDrawer: const UserProfileDrawer(),
       body: IndexedStack(
         index: _currentIndex,
         children: const [
@@ -194,14 +331,15 @@ class _AlbumsTab extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: const Text('CromoManía 2026'),
+            automaticallyImplyLeading: false,
           ),
           body: BlocBuilder<CollectionCubit, CollectionState>(
             builder: (context, collectionState) {
               // Update stats when collection changes
               context.read<StatsCubit>().updateFromCollection(
                 statusMap: collectionState.statusMap,
-                totalStickers: collectionState.totalStickers > 0 
-                    ? collectionState.totalStickers 
+                totalStickers: collectionState.totalStickers > 0
+                    ? collectionState.totalStickers
                     : 100, // Default for MVP
               );
 
@@ -238,6 +376,7 @@ class _StatsTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Collection Stats'),
+        automaticallyImplyLeading: false,
       ),
       body: BlocBuilder<StatsCubit, StatsState>(
         builder: (context, state) {
@@ -257,6 +396,7 @@ class _ExportTab extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Export Collection'),
+        automaticallyImplyLeading: false,
       ),
       body: BlocBuilder<PdfExportCubit, PdfExportState>(
         builder: (context, pdfState) {
@@ -266,9 +406,9 @@ class _ExportTab extends StatelessWidget {
                 builder: (context, collectionState) {
                   // Prepare sticker data for PDF
                   final stickers = <PdfStickerData>[];
-                  
+
                   // If we have stickers from selected section, use those
-                  if (albumState.selectedSection != null && 
+                  if (albumState.selectedSection != null &&
                       albumState.currentSectionStickers.isNotEmpty) {
                     for (final sticker in albumState.currentSectionStickers) {
                       stickers.add(PdfStickerData(
@@ -284,31 +424,31 @@ class _ExportTab extends StatelessWidget {
                     state: pdfState,
                     onExportFull: () {
                       context.read<PdfExportCubit>().generatePdf(
-                        albumName: albumState.selectedAlbum?.name ?? 'My Collection',
-                        sectionName: '',
-                        stickers: stickers,
-                        statusMap: collectionState.statusMap,
-                        filter: ExportFilter.full,
-                      );
+                            albumName: albumState.selectedAlbum?.name ?? 'My Collection',
+                            sectionName: '',
+                            stickers: stickers,
+                            statusMap: collectionState.statusMap,
+                            filter: ExportFilter.full,
+                          );
                     },
                     onExportMissing: () {
                       context.read<PdfExportCubit>().generatePdf(
-                        albumName: albumState.selectedAlbum?.name ?? 'My Collection',
-                        sectionName: 'Missing Stickers Only',
-                        stickers: stickers,
-                        statusMap: collectionState.statusMap,
-                        filter: ExportFilter.missingOnly,
-                      );
+                            albumName: albumState.selectedAlbum?.name ?? 'My Collection',
+                            sectionName: 'Missing Stickers Only',
+                            stickers: stickers,
+                            statusMap: collectionState.statusMap,
+                            filter: ExportFilter.missingOnly,
+                          );
                     },
                     onExportSection: () {
                       if (albumState.selectedSection != null) {
                         context.read<PdfExportCubit>().generatePdf(
-                          albumName: albumState.selectedAlbum?.name ?? 'My Collection',
-                          sectionName: albumState.selectedSection!.name,
-                          stickers: stickers,
-                          statusMap: collectionState.statusMap,
-                          filter: ExportFilter.section,
-                        );
+                              albumName: albumState.selectedAlbum?.name ?? 'My Collection',
+                              sectionName: albumState.selectedSection!.name,
+                              stickers: stickers,
+                              statusMap: collectionState.statusMap,
+                              filter: ExportFilter.section,
+                            );
                       }
                     },
                     onShare: () {
