@@ -1,0 +1,63 @@
+{
+	"subagents": {
+		"agentOverrides": {
+			"sdd-init": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-explore": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-proposal": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-spec": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-design": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-tasks": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-apply": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-verify": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-sync": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-archive": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"context-builder": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"delegate": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"oracle": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"planner": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"researcher": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"reviewer": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"scout": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"sdd-onboard": {
+				"model": "github-copilot/gpt-5.4"
+			},
+			"worker": {
+				"model": "github-copilot/gpt-5.4"
+			}
+		}
+	}
+}
