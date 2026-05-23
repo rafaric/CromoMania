@@ -73,6 +73,7 @@ class SyncCubit extends Cubit<SyncState> {
 
   /// Queue a change for sync
   Future<void> queueChange(String stickerId, Map<String, dynamic> data) async {
+    print('SyncCubit: queueChange called for sticker $stickerId');
     await _syncEngine.queueChange(stickerId, data);
     await _updatePendingCount();
     
@@ -101,7 +102,6 @@ class SyncCubit extends Cubit<SyncState> {
   void clearSync() {
     _syncEngine.dispose();
     emit(const SyncState.initial());
-    _initSyncEngine();
   }
 
   @override

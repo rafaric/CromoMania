@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'auth/data/firebase_auth_service.dart';
 import 'auth/presentation/cubit/auth_cubit.dart';
@@ -9,6 +10,7 @@ import 'connectivity/connectivity_service.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'database/app_database.dart';
+import 'firebase_options.dart';
 import 'features/album/data/datasources/local/album_local_datasource.dart';
 import 'features/album/data/repositories/album_repository_impl.dart';
 import 'features/album/presentation/cubit/album_cubit.dart';
@@ -34,11 +36,12 @@ import 'sync/presentation/cubit/sync_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase (throws if not configured properly)
-  // Note: Firebase must be initialized before using any Firebase services
-  // For development, you need to run `flutterfire configure` or add your google-services.json
-
+  
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  
   // Initialize database
   final database = AppDatabase();
 
@@ -94,7 +97,10 @@ class StickerCollectorApp extends StatelessWidget {
           BlocProvider<CollectionCubit>(
             create: (context) {
               final collectionRepository = CollectionRepositoryImpl(database);
-              return CollectionCubit(collectionRepository)..loadCollection();
+              final syncCubit = context.read<SyncCubit>();
+              final cubit = CollectionCubit(collectionRepository)..loadCollection();
+              cubit.setSyncCubit(syncCubit);
+              return cubit;
             },
           ),
           // Stats cubit - calculates statistics
@@ -114,7 +120,16 @@ class StickerCollectorApp extends StatelessWidget {
           title: AppConstants.appName,
           theme: AppTheme.lightTheme,
           debugShowCheckedModeBanner: false,
-          home: const AuthGate(),
+          home: BlocListener<AuthCubit, AuthState>(
+            listener: (context, authState) {
+              // When user authenticates, update CollectionCubit
+              if (authState.status == AuthStateStatus.authenticated) {
+                final collectionCubit = context.read<CollectionCubit>();
+                collectionCubit.updateUserId();
+              }
+            },
+            child: const AuthGate(),
+          ),
         ),
       ),
     );

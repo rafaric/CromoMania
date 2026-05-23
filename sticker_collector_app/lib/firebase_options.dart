@@ -36,13 +36,12 @@ class DefaultFirebaseOptions {
   }
 
   // Firebase configuration values from google-services.json
-  // These should be replaced by running `flutterfire configure`
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_API_KEY',
-    appId: 'YOUR_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
+    apiKey: 'AIzaSyA0fv_vNm9HI5uDdQyg7qE-nJItKI8Z2-U',
+    appId: '1:205808541889:android:ef9323a575d14a9347b440',
+    messagingSenderId: '205808541889',
     projectId: 'cromomania-2026',
-    storageBucket: 'cromomania-2026.appspot.com',
+    storageBucket: 'cromomania-2026.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

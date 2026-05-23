@@ -12,7 +12,20 @@
           "package_name": "com.stickercollector.sticker_collector_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "205808541889-oj75d77hfdnj34kn1sc03u5t61nvc24h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.stickercollector.sticker_collector_app",
+            "certificate_hash": "2b9a4fa1897d1b9ea62dd6001591391fcfa296a8"
+          }
+        },
+        {
+          "client_id": "205808541889-710dfokhipd8i53p6v2offd9frjimt38.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA0fv_vNm9HI5uDdQyg7qE-nJItKI8Z2-U"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "205808541889-710dfokhipd8i53p6v2offd9frjimt38.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
