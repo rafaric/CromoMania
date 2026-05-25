@@ -28,8 +28,14 @@ class TeamStickersPage extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          color: AppTheme.primaryLight.withValues(alpha: 0.1),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppTheme.primaryColor, AppTheme.accentBlue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
           child: Row(
             children: [
               Expanded(
@@ -37,18 +43,25 @@ class TeamStickersPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
+                      'Album / ${team.groupName} / ${team.name}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
                       team.name,
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      team.groupName,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${stickers.length} stickers',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      '${stickers.length} stickers to track',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.95),
+                      ),
                     ),
                   ],
                 ),
@@ -56,7 +69,7 @@ class TeamStickersPage extends StatelessWidget {
               if (onExportTeam != null)
                 IconButton(
                   onPressed: onExportTeam,
-                  icon: const Icon(Icons.picture_as_pdf),
+                  icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
                   tooltip: 'Export team',
                 ),
             ],
@@ -66,7 +79,7 @@ class TeamStickersPage extends StatelessWidget {
           child: BlocBuilder<CollectionCubit, CollectionState>(
             builder: (context, state) {
               return GridView.builder(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.fromLTRB(10, 12, 10, 18),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: AppConstants.defaultGridColumns,
                   childAspectRatio: AppConstants.stickerTileAspectRatio,

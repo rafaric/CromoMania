@@ -1,39 +1,47 @@
 import 'package:flutter/material.dart';
 
-/// Application theme configuration
+/// Application theme configuration.
 class AppTheme {
   AppTheme._();
 
-  // Primary colors (FIFA style blue)
-  static const Color primaryColor = Color(0xFF1E88E5);
-  static const Color primaryDark = Color(0xFF1565C0);
-  static const Color primaryLight = Color(0xFF64B5F6);
+  // Panini-inspired palette.
+  static const Color primaryColor = Color(0xFFD71920);
+  static const Color primaryDark = Color(0xFFA50F15);
+  static const Color primaryLight = Color(0xFFFFE082);
+  static const Color accentBlue = Color(0xFF0057B8);
+  static const Color surfaceTint = Color(0xFFFFF8E7);
 
   // Status colors
-  static const Color ownedColor = Color(0xFF4CAF50);
+  static const Color ownedColor = Color(0xFF2E7D32);
   static const Color ownedBackgroundColor = Color(0xFFE8F5E9);
-  static const Color missingColor = Color(0xFF9E9E9E);
-  static const Color missingBackgroundColor = Color(0xFFF5F5F5);
+  static const Color missingColor = Color(0xFF90A4AE);
+  static const Color missingBackgroundColor = Color(0xFFF5F7FA);
   static const Color repeatedColor = Color(0xFFFFB300);
-  static const Color repeatedBackgroundColor = Color(0xFFFFF8E1);
+  static const Color repeatedBackgroundColor = Color(0xFFFFF4CC);
 
   // Text colors
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  static const Color textPrimary = Color(0xFF1C1C1C);
+  static const Color textSecondary = Color(0xFF5F6368);
   static const Color textOnPrimary = Colors.white;
 
   // Card colors
   static const Color cardColor = Colors.white;
-  static const Color cardBorderColor = Color(0xFFE0E0E0);
+  static const Color cardBorderColor = Color(0xFFFFD54F);
 
   /// Get the main Material theme
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: Brightness.light,
-      ),
+      colorScheme:
+          ColorScheme.fromSeed(
+            seedColor: primaryColor,
+            brightness: Brightness.light,
+          ).copyWith(
+            primary: primaryColor,
+            secondary: accentBlue,
+            surface: Colors.white,
+          ),
+      scaffoldBackgroundColor: surfaceTint,
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         elevation: 0,
@@ -41,15 +49,17 @@ class AppTheme {
         foregroundColor: textOnPrimary,
       ),
       cardTheme: const CardThemeData(
-        elevation: 2,
+        elevation: 3,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: cardBorderColor),
         ),
         color: cardColor,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         selectedItemColor: primaryColor,
         unselectedItemColor: textSecondary,
+        backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
@@ -78,14 +88,8 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          color: textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          color: textSecondary,
-        ),
+        bodyLarge: TextStyle(fontSize: 16, color: textPrimary),
+        bodyMedium: TextStyle(fontSize: 14, color: textSecondary),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -111,8 +115,8 @@ class AppTheme {
 
   /// Get progress ring color based on percentage
   static Color getProgressColor(double percent) {
-    if (percent >= 90) return Colors.green;
-    if (percent >= 50) return primaryColor;
-    return Colors.orange;
+    if (percent >= 90) return ownedColor;
+    if (percent >= 50) return accentBlue;
+    return repeatedColor;
   }
 }

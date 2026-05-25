@@ -28,16 +28,26 @@ class StickerTile extends StatelessWidget {
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
             color: AppTheme.getStatusBackgroundColor(count),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: AppTheme.getStatusBorderColor(count),
               width: 2,
             ),
+            gradient: count == 0
+                ? null
+                : LinearGradient(
+                    colors: [
+                      AppTheme.getStatusBackgroundColor(count),
+                      Colors.white,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
+                color: AppTheme.primaryDark.withValues(alpha: 0.08),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -53,8 +63,8 @@ class StickerTile extends StatelessWidget {
                       Text(
                         sticker.stickerNumber,
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
                           color: count == 0
                               ? AppTheme.textSecondary
                               : AppTheme.textPrimary,
@@ -65,7 +75,12 @@ class StickerTile extends StatelessWidget {
                         sticker.name,
                         style: TextStyle(
                           fontSize: 10,
-                          color: AppTheme.textSecondary,
+                          color: count == 0
+                              ? AppTheme.textSecondary
+                              : AppTheme.accentBlue,
+                          fontWeight: count == 0
+                              ? FontWeight.w400
+                              : FontWeight.w600,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -78,30 +93,18 @@ class StickerTile extends StatelessWidget {
 
               // Status indicator (top-right)
               if (count > 0)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: _buildStatusIcon(),
-                ),
+                Positioned(top: 4, right: 4, child: _buildStatusIcon()),
 
               // Count badge (bottom-right)
               if (count > 1)
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: _buildCountBadge(),
-                ),
+                Positioned(bottom: 4, right: 4, child: _buildCountBadge()),
 
               // Special sticker indicator (top-left)
               if (sticker.isSpecial)
                 Positioned(
                   top: 4,
                   left: 4,
-                  child: Icon(
-                    Icons.star,
-                    size: 12,
-                    color: Colors.amber,
-                  ),
+                  child: Icon(Icons.star, size: 12, color: Colors.amber),
                 ),
             ],
           ),
@@ -112,24 +115,16 @@ class StickerTile extends StatelessWidget {
 
   Widget _buildStatusIcon() {
     if (count == 1) {
-      return const Icon(
-        Icons.check,
-        color: AppTheme.ownedColor,
-        size: 16,
-      );
+      return const Icon(Icons.check, color: AppTheme.ownedColor, size: 16);
     }
-    return const Icon(
-      Icons.copy,
-      color: AppTheme.repeatedColor,
-      size: 16,
-    );
+    return const Icon(Icons.copy, color: AppTheme.repeatedColor, size: 16);
   }
 
   Widget _buildCountBadge() {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.orange,
+        color: AppTheme.primaryColor,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(

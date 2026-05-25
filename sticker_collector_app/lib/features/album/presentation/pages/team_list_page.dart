@@ -23,16 +23,46 @@ class TeamListPage extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          color: AppTheme.primaryLight.withValues(alpha: 0.1),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.accentBlue.withValues(alpha: 0.95),
+                AppTheme.primaryColor.withValues(alpha: 0.88),
+              ],
+            ),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(group.name, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 4),
               Text(
-                '${group.teamCount} teams • ${group.stickerCount} stickers',
-                style: Theme.of(context).textTheme.bodyMedium,
+                'Album / ${group.name}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                group.name,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _TeamMetaChip(
+                    icon: Icons.groups_2,
+                    label: '${group.teamCount} teams',
+                  ),
+                  _TeamMetaChip(
+                    icon: Icons.style,
+                    label: '${group.stickerCount} stickers',
+                  ),
+                ],
               ),
             ],
           ),
@@ -44,17 +74,40 @@ class TeamListPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final team = teams[index];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withValues(
-                      alpha: 0.1,
-                    ),
-                    foregroundColor: AppTheme.primaryColor,
-                    child: Text('${index + 1}'),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                  title: Text(team.name),
-                  subtitle: Text('${team.stickerCount} stickers'),
+                  leading: CircleAvatar(
+                    backgroundColor: AppTheme.primaryLight,
+                    foregroundColor: AppTheme.primaryDark,
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  title: Text(
+                    team.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.style,
+                          size: 14,
+                          color: AppTheme.accentBlue,
+                        ),
+                        const SizedBox(width: 6),
+                        Text('${team.stickerCount} stickers'),
+                      ],
+                    ),
+                  ),
                   trailing: const Icon(
                     Icons.chevron_right,
                     color: AppTheme.textSecondary,
@@ -66,6 +119,38 @@ class TeamListPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TeamMetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _TeamMetaChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
