@@ -1,10 +1,13 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
-import '../../../../../database/app_database.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../database/app_database.dart';
 import '../../../domain/entities/album.dart' as entity;
 import '../../../domain/entities/section.dart' as entity;
 import '../../../domain/entities/sticker.dart' as entity;
-import 'seed_data.dart';
 
 /// Local data source for album operations with seeding support
 class AlbumLocalDataSource {
@@ -22,47 +25,129 @@ class AlbumLocalDataSource {
   Future<void> seedIfNeeded() async {
     if (!await isAlbumsTableEmpty()) return;
 
+    final seed = await _loadSeedAlbum();
+
     await _db.transaction(() async {
-      // 1. Insert album
-      final albumId = await _db.insertAlbum(AlbumsCompanion(
-        name: Value(SeedData.album['name'] as String),
-        publisher: Value(SeedData.album['publisher'] as String),
-        description: Value(SeedData.album['description'] as String),
-        totalStickers: Value(SeedData.album['totalStickers'] as int),
-      ));
+      final albumId = await _db.insertAlbum(
+        AlbumsCompanion(
+          name: Value(seed.name),
+          publisher: Value(seed.publisher),
+          description: Value(seed.description),
+          totalStickers: Value(seed.totalStickers),
+        ),
+      );
 
-      // 2. Insert sections and stickers
-      for (final sectionData in SeedData.sections) {
-        final sectionId = await _db.insertSection(SectionsCompanion(
-          albumId: Value(albumId),
-          name: Value(sectionData['name'] as String),
-          orderIndex: Value(sectionData['orderIndex'] as int),
-        ));
+      for (final sectionData in seed.sections) {
+        final sectionId = await _db.insertSection(
+          SectionsCompanion(
+            albumId: Value(albumId),
+            name: Value(sectionData.name),
+            orderIndex: Value(sectionData.orderIndex),
+          ),
+        );
 
-        // Insert stickers for this section
-        final sectionIndex = sectionData['orderIndex'] as int;
-        final stickerList = SeedData.stickers[sectionIndex] ?? [];
-
-        for (final stickerData in stickerList) {
-          await _db.insertSticker(StickersCompanion(
-            sectionId: Value(sectionId),
-            stickerNumber: Value(stickerData['number'] as String),
-            name: Value(stickerData['name'] as String),
-            isSpecial: Value(stickerData['isSpecial'] as bool),
-          ));
+        for (final stickerData in sectionData.stickers) {
+          await _db.insertSticker(
+            StickersCompanion(
+              sectionId: Value(sectionId),
+              stickerNumber: Value(stickerData.number),
+              name: Value(stickerData.name),
+              isSpecial: Value(stickerData.isSpecial),
+            ),
+          );
         }
       }
 
-      // 3. Initialize collection statuses for all stickers
-      final stickerIds = await _getAllStickerIds();
+      final stickerIds = await _getAllStickerIds(albumId);
       if (stickerIds.isNotEmpty) {
-        await _db.initializeDefaultStatuses(AppConstants.defaultUserId, stickerIds);
+        await _db.initializeDefaultStatuses(
+          AppConstants.defaultUserId,
+          stickerIds,
+        );
       }
     });
   }
 
-  Future<List<int>> _getAllStickerIds() async {
-    final sectionList = await _db.getSectionsForAlbum(1);
+  Future<_SeedAlbum> _loadSeedAlbum() async {
+    final rawJson = await rootBundle.loadString('assets/album.json');
+    final jsonMap = jsonDecode(rawJson) as Map<String, dynamic>;
+    final albumMap = jsonMap['album'] as Map<String, dynamic>;
+    final sectionsJson = albumMap['secciones'] as List<dynamic>;
+
+    final sections = <_SeedSection>[];
+    var orderIndex = 0;
+
+    for (final dynamic sectionEntry in sectionsJson) {
+      final sectionMap = sectionEntry as Map<String, dynamic>;
+      final groupName = sectionMap['grupo'] as String;
+      final teamEntries = sectionMap['equipos'] as List<dynamic>?;
+
+      if (teamEntries != null) {
+        for (final dynamic teamEntry in teamEntries) {
+          final teamMap = teamEntry as Map<String, dynamic>;
+          final teamName = teamMap['pais'] as String;
+          final codes = (teamMap['codigos'] as List<dynamic>).cast<String>();
+
+          sections.add(
+            _SeedSection(
+              name: '$groupName - $teamName',
+              orderIndex: orderIndex++,
+              stickers: codes
+                  .map(
+                    (code) => _SeedSticker(
+                      number: code,
+                      name: code,
+                      isSpecial: false,
+                    ),
+                  )
+                  .toList(),
+            ),
+          );
+        }
+        continue;
+      }
+
+      final sectionName = sectionMap['nombre'] as String? ?? groupName;
+      final codes = (sectionMap['codigos'] as List<dynamic>).cast<String>();
+      final isSpecialSection = groupName == 'Especiales';
+
+      sections.add(
+        _SeedSection(
+          name: sectionName,
+          orderIndex: orderIndex++,
+          stickers: codes
+              .map(
+                (code) => _SeedSticker(
+                  number: code,
+                  name: code,
+                  isSpecial: isSpecialSection,
+                ),
+              )
+              .toList(),
+        ),
+      );
+    }
+
+    final countedTotal = sections.fold<int>(
+      0,
+      (sum, section) => sum + section.stickers.length,
+    );
+    final declaredTotal = albumMap['total_figuras'] as int;
+
+    return _SeedAlbum(
+      name: 'Panini FIFA World Cup 2026',
+      publisher: 'Panini',
+      description:
+          'Official FIFA World Cup USA-Canada-Mexico 2026 Sticker Album',
+      totalStickers: countedTotal == declaredTotal
+          ? declaredTotal
+          : countedTotal,
+      sections: sections,
+    );
+  }
+
+  Future<List<int>> _getAllStickerIds(int albumId) async {
+    final sectionList = await _db.getSectionsForAlbum(albumId);
     final stickerIds = <int>[];
     for (final section in sectionList) {
       final stickers = await _db.getStickersForSection(section.id);
@@ -145,4 +230,44 @@ class AlbumLocalDataSource {
       isSpecial: sticker.isSpecial,
     );
   }
+}
+
+class _SeedAlbum {
+  final String name;
+  final String publisher;
+  final String description;
+  final int totalStickers;
+  final List<_SeedSection> sections;
+
+  const _SeedAlbum({
+    required this.name,
+    required this.publisher,
+    required this.description,
+    required this.totalStickers,
+    required this.sections,
+  });
+}
+
+class _SeedSection {
+  final String name;
+  final int orderIndex;
+  final List<_SeedSticker> stickers;
+
+  const _SeedSection({
+    required this.name,
+    required this.orderIndex,
+    required this.stickers,
+  });
+}
+
+class _SeedSticker {
+  final String number;
+  final String name;
+  final bool isSpecial;
+
+  const _SeedSticker({
+    required this.number,
+    required this.name,
+    required this.isSpecial,
+  });
 }
