@@ -18,6 +18,7 @@ import 'features/album/presentation/cubit/album_state.dart';
 import 'features/album/presentation/pages/album_detail_page.dart';
 import 'features/album/presentation/pages/album_list_page.dart';
 import 'features/album/presentation/pages/section_stickers_page.dart';
+import 'features/album/presentation/pages/team_list_page.dart';
 import 'features/collection/data/repositories/collection_repository_impl.dart';
 import 'features/collection/presentation/cubit/collection_cubit.dart';
 import 'features/collection/presentation/cubit/collection_state.dart';
@@ -286,21 +287,20 @@ class _AlbumsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AlbumCubit, AlbumState>(
       builder: (context, state) {
-        // If we're showing stickers, show the stickers page
-        if (state.selectedSection != null) {
+        if (state.selectedTeam != null) {
           return PopScope(
             canPop: false,
             onPopInvokedWithResult: (didPop, result) {
               if (didPop) return;
-              context.read<AlbumCubit>().clearSection();
+              context.read<AlbumCubit>().clearTeam();
             },
             child: Scaffold(
               appBar: AppBar(
-                title: Text(state.selectedSection!.name),
+                title: Text(state.selectedTeam!.name),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {
-                    context.read<AlbumCubit>().clearSection();
+                    context.read<AlbumCubit>().clearTeam();
                   },
                 ),
                 actions: [
@@ -312,15 +312,50 @@ class _AlbumsTab extends StatelessWidget {
                   ),
                 ],
               ),
-              body: SectionStickersPage(
-                section: state.selectedSection!,
-                stickers: state.currentSectionStickers,
+              body: TeamStickersPage(
+                team: state.selectedTeam!,
+                stickers: state.currentTeamStickers,
               ),
             ),
           );
         }
 
-        // If we're showing album detail, show the sections
+        if (state.selectedGroup != null) {
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              context.read<AlbumCubit>().clearGroup();
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(state.selectedGroup!.name),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    context.read<AlbumCubit>().clearGroup();
+                  },
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.home),
+                    onPressed: () {
+                      context.read<AlbumCubit>().clearAlbum();
+                    },
+                  ),
+                ],
+              ),
+              body: TeamListPage(
+                group: state.selectedGroup!,
+                teams: state.teams,
+                onTeamTap: (team) {
+                  context.read<AlbumCubit>().selectTeam(team.id);
+                },
+              ),
+            ),
+          );
+        }
+
         if (state.selectedAlbum != null) {
           return PopScope(
             canPop: false,
@@ -340,9 +375,9 @@ class _AlbumsTab extends StatelessWidget {
               ),
               body: AlbumDetailPage(
                 album: state.selectedAlbum!,
-                sections: state.sections,
-                onSectionTap: (section) {
-                  context.read<AlbumCubit>().selectSection(section.id);
+                groups: state.groups,
+                onGroupTap: (group) {
+                  context.read<AlbumCubit>().selectGroup(group.id);
                 },
               ),
             ),
@@ -362,7 +397,7 @@ class _AlbumsTab extends StatelessWidget {
                 statusMap: collectionState.statusMap,
                 totalStickers: collectionState.totalStickers > 0
                     ? collectionState.totalStickers
-                    : 100, // Default for MVP
+                    : (state.selectedAlbum?.totalStickers ?? 992),
               );
 
               if (state.status == AlbumStatus.loading) {
@@ -427,16 +462,15 @@ class _ExportTab extends StatelessWidget {
                   // Prepare sticker data for PDF
                   final stickers = <PdfStickerData>[];
 
-                  // If we have stickers from selected section, use those
-                  if (albumState.selectedSection != null &&
-                      albumState.currentSectionStickers.isNotEmpty) {
-                    for (final sticker in albumState.currentSectionStickers) {
+                  if (albumState.selectedTeam != null &&
+                      albumState.currentTeamStickers.isNotEmpty) {
+                    for (final sticker in albumState.currentTeamStickers) {
                       stickers.add(
                         PdfStickerData(
                           id: sticker.id,
                           number: sticker.stickerNumber,
                           name: sticker.name,
-                          sectionName: albumState.selectedSection!.name,
+                          sectionName: albumState.selectedTeam!.fullName,
                         ),
                       );
                     }
@@ -465,11 +499,11 @@ class _ExportTab extends StatelessWidget {
                       );
                     },
                     onExportSection: () {
-                      if (albumState.selectedSection != null) {
+                      if (albumState.selectedTeam != null) {
                         context.read<PdfExportCubit>().generatePdf(
                           albumName:
                               albumState.selectedAlbum?.name ?? 'My Collection',
-                          sectionName: albumState.selectedSection!.name,
+                          sectionName: albumState.selectedTeam!.fullName,
                           stickers: stickers,
                           statusMap: collectionState.statusMap,
                           filter: ExportFilter.section,

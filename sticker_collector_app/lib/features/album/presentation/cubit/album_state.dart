@@ -1,47 +1,49 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/album.dart';
-import '../../domain/entities/section.dart';
-import '../../domain/entities/sticker.dart';
 
-/// Album state status
+import '../../domain/entities/album.dart';
+import '../../domain/entities/album_group.dart';
+import '../../domain/entities/sticker.dart';
+import '../../domain/entities/team.dart';
+
 enum AlbumStatus { initial, loading, loaded, error }
 
-/// Album feature state
 class AlbumState extends Equatable {
   final AlbumStatus status;
   final List<Album> albums;
   final Album? selectedAlbum;
-  final List<Section> sections;
-  final Section? selectedSection;
-  final List<Sticker> currentSectionStickers;
+  final List<AlbumGroup> groups;
+  final AlbumGroup? selectedGroup;
+  final List<Team> teams;
+  final Team? selectedTeam;
+  final List<Sticker> currentTeamStickers;
+  final List<Sticker> allStickers;
   final String? errorMessage;
 
   const AlbumState({
     this.status = AlbumStatus.initial,
     this.albums = const [],
     this.selectedAlbum,
-    this.sections = const [],
-    this.selectedSection,
-    this.currentSectionStickers = const [],
+    this.groups = const [],
+    this.selectedGroup,
+    this.teams = const [],
+    this.selectedTeam,
+    this.currentTeamStickers = const [],
     this.allStickers = const [],
     this.errorMessage,
   });
 
-  /// Get all sticker IDs from all sections of selected album
-  List<int> get allStickerIds {
-    return allStickers.map((s) => s.id).toList();
-  }
-
-  final List<Sticker> allStickers;
+  List<int> get allStickerIds => allStickers.map((s) => s.id).toList();
 
   @override
   List<Object?> get props => [
     status,
     albums,
     selectedAlbum,
-    sections,
-    selectedSection,
-    currentSectionStickers,
+    groups,
+    selectedGroup,
+    teams,
+    selectedTeam,
+    currentTeamStickers,
     allStickers,
     errorMessage,
   ];
@@ -51,10 +53,13 @@ class AlbumState extends Equatable {
     List<Album>? albums,
     Album? selectedAlbum,
     bool clearSelectedAlbum = false,
-    List<Section>? sections,
-    Section? selectedSection,
-    bool clearSelectedSection = false,
-    List<Sticker>? currentSectionStickers,
+    List<AlbumGroup>? groups,
+    AlbumGroup? selectedGroup,
+    bool clearSelectedGroup = false,
+    List<Team>? teams,
+    Team? selectedTeam,
+    bool clearSelectedTeam = false,
+    List<Sticker>? currentTeamStickers,
     List<Sticker>? allStickers,
     String? errorMessage,
   }) {
@@ -64,12 +69,15 @@ class AlbumState extends Equatable {
       selectedAlbum: clearSelectedAlbum
           ? null
           : (selectedAlbum ?? this.selectedAlbum),
-      sections: sections ?? this.sections,
-      selectedSection: clearSelectedSection
+      groups: groups ?? this.groups,
+      selectedGroup: clearSelectedGroup
           ? null
-          : (selectedSection ?? this.selectedSection),
-      currentSectionStickers:
-          currentSectionStickers ?? this.currentSectionStickers,
+          : (selectedGroup ?? this.selectedGroup),
+      teams: teams ?? this.teams,
+      selectedTeam: clearSelectedTeam
+          ? null
+          : (selectedTeam ?? this.selectedTeam),
+      currentTeamStickers: currentTeamStickers ?? this.currentTeamStickers,
       allStickers: allStickers ?? this.allStickers,
       errorMessage: errorMessage ?? this.errorMessage,
     );

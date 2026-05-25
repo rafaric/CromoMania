@@ -6,53 +6,52 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../database/app_database.dart';
 import '../../../domain/entities/album.dart' as entity;
-import '../../../domain/entities/section.dart' as entity;
+import '../../../domain/entities/album_group.dart' as entity;
 import '../../../domain/entities/sticker.dart' as entity;
+import '../../../domain/entities/team.dart' as entity;
 
-/// Local data source for album operations with seeding support
+/// Local data source for album operations with seeding support.
 class AlbumLocalDataSource {
   final AppDatabase _db;
 
   AlbumLocalDataSource(this._db);
 
-  /// Check if albums table is empty
   Future<bool> isAlbumsTableEmpty() async {
     final count = await _db.countAlbums();
     return count == 0;
   }
 
-  /// Seed database with WC 2026 album data
   Future<void> seedIfNeeded() async {
     if (!await isAlbumsTableEmpty()) return;
 
-    final seed = await _loadSeedAlbum();
+    final dataset = await _loadDataset();
 
     await _db.transaction(() async {
       final albumId = await _db.insertAlbum(
         AlbumsCompanion(
-          name: Value(seed.name),
-          publisher: Value(seed.publisher),
-          description: Value(seed.description),
-          totalStickers: Value(seed.totalStickers),
+          name: Value(dataset.name),
+          publisher: Value(dataset.publisher),
+          description: Value(dataset.description),
+          totalStickers: Value(dataset.totalStickers),
         ),
       );
 
-      for (final sectionData in seed.sections) {
+      for (final team in dataset.flattenedTeams) {
         final sectionId = await _db.insertSection(
           SectionsCompanion(
             albumId: Value(albumId),
-            name: Value(sectionData.name),
-            orderIndex: Value(sectionData.orderIndex),
+            name: Value(team.name),
+            orderIndex: Value(team.orderIndex),
           ),
         );
 
-        for (final stickerData in sectionData.stickers) {
+        for (final sticker in team.stickers) {
           await _db.insertSticker(
             StickersCompanion(
               sectionId: Value(sectionId),
-              stickerNumber: Value(stickerData.number),
-              name: Value(stickerData.name),
-              isSpecial: Value(stickerData.isSpecial),
+              stickerNumber: Value(sticker.number),
+              name: Value(sticker.name),
+              isSpecial: Value(sticker.isSpecial),
             ),
           );
         }
@@ -68,73 +67,99 @@ class AlbumLocalDataSource {
     });
   }
 
-  Future<_SeedAlbum> _loadSeedAlbum() async {
+  Future<List<int>> _getAllStickerIds(int albumId) async {
+    final sections = await _db.getSectionsForAlbum(albumId);
+    final stickerIds = <int>[];
+    for (final section in sections) {
+      final stickers = await _db.getStickersForSection(section.id);
+      stickerIds.addAll(stickers.map((s) => s.id));
+    }
+    return stickerIds;
+  }
+
+  Future<_AlbumDataset> _loadDataset() async {
     final rawJson = await rootBundle.loadString('assets/album.json');
     final jsonMap = jsonDecode(rawJson) as Map<String, dynamic>;
     final albumMap = jsonMap['album'] as Map<String, dynamic>;
     final sectionsJson = albumMap['secciones'] as List<dynamic>;
 
-    final sections = <_SeedSection>[];
-    var orderIndex = 0;
+    final groups = <_SeedGroup>[];
+    var teamOrder = 0;
 
-    for (final dynamic sectionEntry in sectionsJson) {
-      final sectionMap = sectionEntry as Map<String, dynamic>;
-      final groupName = sectionMap['grupo'] as String;
+    for (var groupIndex = 0; groupIndex < sectionsJson.length; groupIndex++) {
+      final sectionMap = sectionsJson[groupIndex] as Map<String, dynamic>;
+      final groupName =
+          (sectionMap['nombre'] as String?) ?? (sectionMap['grupo'] as String);
+      final groupId = sectionMap['grupo'] as String;
       final teamEntries = sectionMap['equipos'] as List<dynamic>?;
 
       if (teamEntries != null) {
-        for (final dynamic teamEntry in teamEntries) {
-          final teamMap = teamEntry as Map<String, dynamic>;
-          final teamName = teamMap['pais'] as String;
+        final teams = teamEntries.map((entry) {
+          final teamMap = entry as Map<String, dynamic>;
           final codes = (teamMap['codigos'] as List<dynamic>).cast<String>();
+          final teamName = teamMap['pais'] as String;
+          return _SeedTeam(
+            groupId: groupId,
+            groupName: groupName,
+            name: teamName,
+            orderIndex: teamOrder++,
+            stickers: codes
+                .map(
+                  (code) =>
+                      _SeedSticker(number: code, name: code, isSpecial: false),
+                )
+                .toList(),
+          );
+        }).toList();
 
-          sections.add(
-            _SeedSection(
-              name: '$groupName - $teamName',
-              orderIndex: orderIndex++,
+        groups.add(
+          _SeedGroup(
+            id: groupId,
+            name: groupName,
+            orderIndex: groupIndex,
+            teams: teams,
+          ),
+        );
+        continue;
+      }
+
+      final codes = (sectionMap['codigos'] as List<dynamic>).cast<String>();
+      final isSpecialGroup = groupId == 'Especiales';
+      groups.add(
+        _SeedGroup(
+          id: groupId,
+          name: groupName,
+          orderIndex: groupIndex,
+          teams: [
+            _SeedTeam(
+              groupId: groupId,
+              groupName: groupName,
+              name: groupName,
+              orderIndex: teamOrder++,
               stickers: codes
                   .map(
                     (code) => _SeedSticker(
                       number: code,
                       name: code,
-                      isSpecial: false,
+                      isSpecial: isSpecialGroup,
                     ),
                   )
                   .toList(),
             ),
-          );
-        }
-        continue;
-      }
-
-      final sectionName = sectionMap['nombre'] as String? ?? groupName;
-      final codes = (sectionMap['codigos'] as List<dynamic>).cast<String>();
-      final isSpecialSection = groupName == 'Especiales';
-
-      sections.add(
-        _SeedSection(
-          name: sectionName,
-          orderIndex: orderIndex++,
-          stickers: codes
-              .map(
-                (code) => _SeedSticker(
-                  number: code,
-                  name: code,
-                  isSpecial: isSpecialSection,
-                ),
-              )
-              .toList(),
+          ],
         ),
       );
     }
 
-    final countedTotal = sections.fold<int>(
+    final countedTotal = groups.fold<int>(
       0,
-      (sum, section) => sum + section.stickers.length,
+      (sum, group) =>
+          sum +
+          group.teams.fold<int>(0, (tSum, team) => tSum + team.stickers.length),
     );
     final declaredTotal = albumMap['total_figuras'] as int;
 
-    return _SeedAlbum(
+    return _AlbumDataset(
       name: 'Panini FIFA World Cup 2026',
       publisher: 'Panini',
       description:
@@ -142,64 +167,99 @@ class AlbumLocalDataSource {
       totalStickers: countedTotal == declaredTotal
           ? declaredTotal
           : countedTotal,
-      sections: sections,
+      groups: groups,
     );
   }
 
-  Future<List<int>> _getAllStickerIds(int albumId) async {
-    final sectionList = await _db.getSectionsForAlbum(albumId);
-    final stickerIds = <int>[];
-    for (final section in sectionList) {
-      final stickers = await _db.getStickersForSection(section.id);
-      stickerIds.addAll(stickers.map((s) => s.id));
-    }
-    return stickerIds;
-  }
-
-  // ============== Read Operations ==============
-
-  /// Get all albums
   Future<List<entity.Album>> getAlbums() async {
     final albums = await _db.getAllAlbums();
     return albums.map(_mapAlbumToEntity).toList();
   }
 
-  /// Get album by ID
   Future<entity.Album?> getAlbumById(int id) async {
     final album = await _db.getAlbumById(id);
     return album != null ? _mapAlbumToEntity(album) : null;
   }
 
-  /// Get all sections for an album
-  Future<List<entity.Section>> getSectionsForAlbum(int albumId) async {
-    final sections = await _db.getSectionsForAlbum(albumId);
-    return sections.map(_mapSectionToEntity).toList();
+  Future<List<entity.AlbumGroup>> getGroupsForAlbum(int albumId) async {
+    final dataset = await _loadDataset();
+    return dataset.groups
+        .map(
+          (group) => entity.AlbumGroup(
+            id: group.id,
+            albumId: albumId,
+            name: group.name,
+            orderIndex: group.orderIndex,
+            teamCount: group.teams.length,
+            stickerCount: group.teams.fold<int>(
+              0,
+              (sum, team) => sum + team.stickers.length,
+            ),
+          ),
+        )
+        .toList();
   }
 
-  /// Get section by ID
-  Future<entity.Section?> getSectionById(int id) async {
-    final section = await _db.getSectionById(id);
-    return section != null ? _mapSectionToEntity(section) : null;
+  Future<List<entity.Team>> getTeamsForGroup(
+    int albumId,
+    String groupId,
+  ) async {
+    final mappedTeams = await _mapPersistedTeams(albumId);
+    return mappedTeams.where((team) => team.groupId == groupId).toList();
   }
 
-  /// Get all stickers for a section
-  Future<List<entity.Sticker>> getStickersForSection(int sectionId) async {
-    final stickers = await _db.getStickersForSection(sectionId);
+  Future<entity.Team?> getTeamById(int id) async {
+    final teamSection = await _db.getSectionById(id);
+    if (teamSection == null) return null;
+
+    final mappedTeams = await _mapPersistedTeams(teamSection.albumId);
+    for (final team in mappedTeams) {
+      if (team.id == id) return team;
+    }
+    return null;
+  }
+
+  Future<List<entity.Sticker>> getStickersForTeam(int teamId) async {
+    final stickers = await _db.getStickersForSection(teamId);
     return stickers.map(_mapStickerToEntity).toList();
   }
 
-  /// Get all stickers for an album
   Future<List<entity.Sticker>> getStickersForAlbum(int albumId) async {
     final stickers = await _db.getStickersForAlbum(albumId);
     return stickers.map(_mapStickerToEntity).toList();
   }
 
-  /// Get total sticker count
   Future<int> getTotalStickerCount() async {
-    return await _db.countAllStickers();
+    return _db.countAllStickers();
   }
 
-  // ============== Mappers ==============
+  Future<List<entity.Team>> _mapPersistedTeams(int albumId) async {
+    final dataset = await _loadDataset();
+    final sections = await _db.getSectionsForAlbum(albumId);
+    final flattenedTeams = dataset.flattenedTeams;
+    final limit = sections.length < flattenedTeams.length
+        ? sections.length
+        : flattenedTeams.length;
+    final teams = <entity.Team>[];
+
+    for (var index = 0; index < limit; index++) {
+      final section = sections[index];
+      final seedTeam = flattenedTeams[index];
+      teams.add(
+        entity.Team(
+          id: section.id,
+          albumId: albumId,
+          groupId: seedTeam.groupId,
+          groupName: seedTeam.groupName,
+          name: seedTeam.name,
+          orderIndex: seedTeam.orderIndex,
+          stickerCount: seedTeam.stickers.length,
+        ),
+      );
+    }
+
+    return teams;
+  }
 
   entity.Album _mapAlbumToEntity(Album album) {
     return entity.Album(
@@ -209,15 +269,6 @@ class AlbumLocalDataSource {
       description: album.description,
       totalStickers: album.totalStickers,
       createdAt: album.createdAt,
-    );
-  }
-
-  entity.Section _mapSectionToEntity(Section section) {
-    return entity.Section(
-      id: section.id,
-      albumId: section.albumId,
-      name: section.name,
-      orderIndex: section.orderIndex,
     );
   }
 
@@ -232,28 +283,50 @@ class AlbumLocalDataSource {
   }
 }
 
-class _SeedAlbum {
+class _AlbumDataset {
   final String name;
   final String publisher;
   final String description;
   final int totalStickers;
-  final List<_SeedSection> sections;
+  final List<_SeedGroup> groups;
 
-  const _SeedAlbum({
+  const _AlbumDataset({
     required this.name,
     required this.publisher,
     required this.description,
     required this.totalStickers,
-    required this.sections,
+    required this.groups,
+  });
+
+  List<_SeedTeam> get flattenedTeams => [
+    for (final group in groups) ...group.teams,
+  ];
+}
+
+class _SeedGroup {
+  final String id;
+  final String name;
+  final int orderIndex;
+  final List<_SeedTeam> teams;
+
+  const _SeedGroup({
+    required this.id,
+    required this.name,
+    required this.orderIndex,
+    required this.teams,
   });
 }
 
-class _SeedSection {
+class _SeedTeam {
+  final String groupId;
+  final String groupName;
   final String name;
   final int orderIndex;
   final List<_SeedSticker> stickers;
 
-  const _SeedSection({
+  const _SeedTeam({
+    required this.groupId,
+    required this.groupName,
     required this.name,
     required this.orderIndex,
     required this.stickers,

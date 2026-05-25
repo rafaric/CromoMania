@@ -1,25 +1,20 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../data/repositories/album_repository_impl.dart';
-import '../../domain/entities/sticker.dart';
 import 'album_state.dart';
 
-/// Cubit for managing album state
+/// Cubit for managing album hierarchy state.
 class AlbumCubit extends Cubit<AlbumState> {
   final AlbumRepositoryImpl _repository;
 
   AlbumCubit(this._repository) : super(const AlbumState());
 
-  /// Load albums and initialize database if needed
   Future<void> loadAlbums() async {
     emit(state.copyWith(status: AlbumStatus.loading));
 
     try {
-      // Seed database if needed
       await _repository.initializeDatabase();
-
-      // Load albums
       final albums = await _repository.getAlbums();
-
       emit(state.copyWith(status: AlbumStatus.loaded, albums: albums));
     } catch (e) {
       emit(
@@ -28,7 +23,6 @@ class AlbumCubit extends Cubit<AlbumState> {
     }
   }
 
-  /// Select an album and load its sections
   Future<void> selectAlbum(int albumId) async {
     emit(state.copyWith(status: AlbumStatus.loading));
 
@@ -44,21 +38,19 @@ class AlbumCubit extends Cubit<AlbumState> {
         return;
       }
 
-      final sections = await _repository.getSectionsForAlbum(albumId);
-
-      // Load all stickers for all sections (for trade feature)
-      final allStickers = <Sticker>[];
-      for (final section in sections) {
-        final stickers = await _repository.getStickersForSection(section.id);
-        allStickers.addAll(stickers);
-      }
+      final groups = await _repository.getGroupsForAlbum(albumId);
+      final allStickers = await _repository.getStickersForAlbum(albumId);
 
       emit(
         state.copyWith(
           status: AlbumStatus.loaded,
           selectedAlbum: album,
-          sections: sections,
+          groups: groups,
+          teams: const [],
           allStickers: allStickers,
+          clearSelectedGroup: true,
+          clearSelectedTeam: true,
+          currentTeamStickers: const [],
         ),
       );
     } catch (e) {
@@ -68,29 +60,32 @@ class AlbumCubit extends Cubit<AlbumState> {
     }
   }
 
-  /// Select a section and load its stickers
-  Future<void> selectSection(int sectionId) async {
+  Future<void> selectGroup(String groupId) async {
+    final album = state.selectedAlbum;
+    if (album == null) return;
+
     emit(state.copyWith(status: AlbumStatus.loading));
 
     try {
-      final section = await _repository.getSectionById(sectionId);
-      if (section == null) {
+      final group = state.groups.where((g) => g.id == groupId).firstOrNull;
+      if (group == null) {
         emit(
           state.copyWith(
             status: AlbumStatus.error,
-            errorMessage: 'Section not found',
+            errorMessage: 'Group not found',
           ),
         );
         return;
       }
 
-      final stickers = await _repository.getStickersForSection(sectionId);
-
+      final teams = await _repository.getTeamsForGroup(album.id, groupId);
       emit(
         state.copyWith(
           status: AlbumStatus.loaded,
-          selectedSection: section,
-          currentSectionStickers: stickers,
+          selectedGroup: group,
+          teams: teams,
+          clearSelectedTeam: true,
+          currentTeamStickers: const [],
         ),
       );
     } catch (e) {
@@ -100,25 +95,69 @@ class AlbumCubit extends Cubit<AlbumState> {
     }
   }
 
-  /// Clear selected section
-  void clearSection() {
+  Future<void> selectTeam(int teamId) async {
+    emit(state.copyWith(status: AlbumStatus.loading));
+
+    try {
+      final team = await _repository.getTeamById(teamId);
+      if (team == null) {
+        emit(
+          state.copyWith(
+            status: AlbumStatus.error,
+            errorMessage: 'Team not found',
+          ),
+        );
+        return;
+      }
+
+      final stickers = await _repository.getStickersForTeam(teamId);
+      emit(
+        state.copyWith(
+          status: AlbumStatus.loaded,
+          selectedTeam: team,
+          currentTeamStickers: stickers,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(status: AlbumStatus.error, errorMessage: e.toString()),
+      );
+    }
+  }
+
+  void clearTeam() {
     emit(
-      state.copyWith(clearSelectedSection: true, currentSectionStickers: []),
+      state.copyWith(clearSelectedTeam: true, currentTeamStickers: const []),
     );
   }
 
-  /// Clear selected album
-  void clearAlbum() {
+  void clearGroup() {
     emit(
       state.copyWith(
-        clearSelectedAlbum: true,
-        sections: [],
-        clearSelectedSection: true,
-        currentSectionStickers: [],
+        clearSelectedGroup: true,
+        teams: const [],
+        clearSelectedTeam: true,
+        currentTeamStickers: const [],
       ),
     );
   }
 
-  /// Get total sticker count
+  void clearAlbum() {
+    emit(
+      state.copyWith(
+        clearSelectedAlbum: true,
+        groups: const [],
+        clearSelectedGroup: true,
+        teams: const [],
+        clearSelectedTeam: true,
+        currentTeamStickers: const [],
+      ),
+    );
+  }
+
   Future<int> getTotalStickerCount() => _repository.getTotalStickerCount();
+}
+
+extension<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

@@ -31,7 +31,7 @@ class TradePage extends StatelessWidget {
                   final allStickerIds = albumState.allStickers
                       .map((s) => s.id)
                       .toSet();
-                  final statusMap = collectionState.statusMap ?? {};
+                  final statusMap = collectionState.statusMap;
                   final ownedStickerIds = statusMap.keys.toSet();
 
                   // Missing = all stickers - owned stickers

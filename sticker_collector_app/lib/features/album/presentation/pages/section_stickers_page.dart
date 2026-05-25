@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../collection/presentation/cubit/collection_cubit.dart';
 import '../../../collection/presentation/cubit/collection_state.dart';
 import '../../../collection/presentation/widgets/sticker_tile.dart';
-import '../../domain/entities/section.dart';
 import '../../domain/entities/sticker.dart';
+import '../../domain/entities/team.dart';
 
-/// Section stickers page with grid view
-class SectionStickersPage extends StatelessWidget {
-  final Section section;
+/// Team stickers page with grid view.
+class TeamStickersPage extends StatelessWidget {
+  final Team team;
   final List<Sticker> stickers;
-  final VoidCallback? onExportSection;
+  final VoidCallback? onExportTeam;
 
-  const SectionStickersPage({
+  const TeamStickersPage({
     super.key,
-    required this.section,
+    required this.team,
     required this.stickers,
-    this.onExportSection,
+    this.onExportTeam,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Section header
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -37,8 +37,13 @@ class SectionStickersPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      section.name,
+                      team.name,
                       style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      team.groupName,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -48,17 +53,15 @@ class SectionStickersPage extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onExportSection != null)
+              if (onExportTeam != null)
                 IconButton(
-                  onPressed: onExportSection,
+                  onPressed: onExportTeam,
                   icon: const Icon(Icons.picture_as_pdf),
-                  tooltip: 'Export section',
+                  tooltip: 'Export team',
                 ),
             ],
           ),
         ),
-
-        // Sticker grid
         Expanded(
           child: BlocBuilder<CollectionCubit, CollectionState>(
             builder: (context, state) {
@@ -79,12 +82,12 @@ class SectionStickersPage extends StatelessWidget {
                     key: ValueKey(sticker.id),
                     sticker: sticker,
                     count: count,
-                    onTap: () {
-                      context.read<CollectionCubit>().incrementSticker(sticker.id);
-                    },
-                    onLongPress: () {
-                      context.read<CollectionCubit>().decrementSticker(sticker.id);
-                    },
+                    onTap: () => context
+                        .read<CollectionCubit>()
+                        .incrementSticker(sticker.id),
+                    onLongPress: () => context
+                        .read<CollectionCubit>()
+                        .decrementSticker(sticker.id),
                   );
                 },
               );

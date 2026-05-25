@@ -55,10 +55,7 @@ class PdfExportPage extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Export options
-          Text(
-            'Export Options',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Export Options', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
 
           _buildExportButton(
@@ -82,8 +79,8 @@ class PdfExportPage extends StatelessWidget {
           _buildExportButton(
             context,
             icon: Icons.folder,
-            title: 'Current Section',
-            subtitle: 'Export stickers from current section',
+            title: 'Current Team',
+            subtitle: 'Export stickers from current team',
             onTap: onExportSection,
           ),
 
@@ -118,8 +115,8 @@ class PdfExportPage extends StatelessWidget {
                     Text(
                       'PDF Ready!',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppTheme.ownedColor,
-                          ),
+                        color: AppTheme.ownedColor,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
@@ -149,17 +146,13 @@ class PdfExportPage extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    const Icon(
-                      Icons.error,
-                      size: 48,
-                      color: Colors.red,
-                    ),
+                    const Icon(Icons.error, size: 48, color: Colors.red),
                     const SizedBox(height: 16),
                     Text(
                       'Error generating PDF',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.red,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(color: Colors.red),
                     ),
                     if (state.errorMessage != null) ...[
                       const SizedBox(height: 8),
@@ -201,20 +194,14 @@ class PdfExportPage extends StatelessWidget {
                   color: AppTheme.primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppTheme.primaryColor,
-                ),
+                child: Icon(icon, color: AppTheme.primaryColor),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyMedium,
@@ -222,10 +209,7 @@ class PdfExportPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppTheme.textSecondary,
-              ),
+              const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
             ],
           ),
         ),
