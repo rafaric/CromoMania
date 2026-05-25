@@ -182,22 +182,28 @@ class AlbumLocalDataSource {
   }
 
   Future<List<entity.AlbumGroup>> getGroupsForAlbum(int albumId) async {
+    final mappedTeams = await _mapPersistedTeams(albumId);
+    final grouped = <String, List<entity.Team>>{};
+    for (final team in mappedTeams) {
+      grouped.putIfAbsent(team.groupId, () => []).add(team);
+    }
+
     final dataset = await _loadDataset();
-    return dataset.groups
-        .map(
-          (group) => entity.AlbumGroup(
-            id: group.id,
-            albumId: albumId,
-            name: group.name,
-            orderIndex: group.orderIndex,
-            teamCount: group.teams.length,
-            stickerCount: group.teams.fold<int>(
-              0,
-              (sum, team) => sum + team.stickers.length,
-            ),
-          ),
-        )
-        .toList();
+    return dataset.groups.map((group) {
+      final teams = grouped[group.id] ?? const <entity.Team>[];
+      return entity.AlbumGroup(
+        id: group.id,
+        albumId: albumId,
+        name: group.name,
+        orderIndex: group.orderIndex,
+        teamCount: teams.length,
+        stickerCount: teams.fold<int>(
+          0,
+          (sum, team) => sum + team.stickerCount,
+        ),
+        stickerIds: [for (final team in teams) ...team.stickerIds],
+      );
+    }).toList();
   }
 
   Future<List<entity.Team>> getTeamsForGroup(
@@ -245,6 +251,7 @@ class AlbumLocalDataSource {
     for (var index = 0; index < limit; index++) {
       final section = sections[index];
       final seedTeam = flattenedTeams[index];
+      final stickers = await _db.getStickersForSection(section.id);
       teams.add(
         entity.Team(
           id: section.id,
@@ -253,7 +260,8 @@ class AlbumLocalDataSource {
           groupName: seedTeam.groupName,
           name: seedTeam.name,
           orderIndex: seedTeam.orderIndex,
-          stickerCount: seedTeam.stickers.length,
+          stickerCount: stickers.length,
+          stickerIds: stickers.map((sticker) => sticker.id).toList(),
         ),
       );
     }

@@ -8,6 +8,7 @@ class AlbumGroup extends Equatable {
   final int orderIndex;
   final int teamCount;
   final int stickerCount;
+  final List<int> stickerIds;
 
   const AlbumGroup({
     required this.id,
@@ -16,6 +17,7 @@ class AlbumGroup extends Equatable {
     required this.orderIndex,
     required this.teamCount,
     required this.stickerCount,
+    this.stickerIds = const [],
   });
 
   @override
@@ -26,5 +28,6 @@ class AlbumGroup extends Equatable {
     orderIndex,
     teamCount,
     stickerCount,
+    stickerIds,
   ];
 }

@@ -296,7 +296,7 @@ class _AlbumsTab extends StatelessWidget {
             },
             child: Scaffold(
               appBar: AppBar(
-                title: Text(state.selectedTeam!.name),
+                title: const Text('Stickers'),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {
@@ -329,7 +329,7 @@ class _AlbumsTab extends StatelessWidget {
             },
             child: Scaffold(
               appBar: AppBar(
-                title: Text(state.selectedGroup!.name),
+                title: const Text('Teams'),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {
@@ -365,7 +365,7 @@ class _AlbumsTab extends StatelessWidget {
             },
             child: Scaffold(
               appBar: AppBar(
-                title: Text(state.selectedAlbum!.name),
+                title: const Text('Album'),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {
@@ -387,7 +387,7 @@ class _AlbumsTab extends StatelessWidget {
         // Otherwise show the album list
         return Scaffold(
           appBar: AppBar(
-            title: const Text('CromoManía 2026'),
+            title: const Text('Álbumes'),
             automaticallyImplyLeading: false,
           ),
           body: BlocBuilder<CollectionCubit, CollectionState>(

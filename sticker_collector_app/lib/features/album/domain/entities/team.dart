@@ -9,6 +9,7 @@ class Team extends Equatable {
   final String name;
   final int orderIndex;
   final int stickerCount;
+  final List<int> stickerIds;
 
   const Team({
     required this.id,
@@ -18,6 +19,7 @@ class Team extends Equatable {
     required this.name,
     required this.orderIndex,
     required this.stickerCount,
+    this.stickerIds = const [],
   });
 
   String get fullName => groupName == name ? name : '$groupName - $name';
@@ -31,5 +33,6 @@ class Team extends Equatable {
     name,
     orderIndex,
     stickerCount,
+    stickerIds,
   ];
 }
