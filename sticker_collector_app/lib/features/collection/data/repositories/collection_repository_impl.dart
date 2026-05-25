@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 import '../../../../database/app_database.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../domain/entities/collection_status.dart' as entity;
 import '../../domain/repositories/collection_repository.dart';
 

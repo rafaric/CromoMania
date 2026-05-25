@@ -29,6 +29,11 @@ import 'features/pdf_export/presentation/pages/pdf_export_page.dart';
 import 'features/stats/presentation/cubit/stats_cubit.dart';
 import 'features/stats/presentation/cubit/stats_state.dart';
 import 'features/stats/presentation/pages/stats_dashboard_page.dart';
+import 'features/trade/data/repositories/trade_repository_impl.dart';
+import 'features/trade/presentation/cubit/trade_cubit.dart';
+import 'features/trade/presentation/cubit/trade_scanner_cubit.dart';
+import 'features/trade/domain/usecases/parse_qr_usecase.dart' as trade_usecases;
+import 'features/trade/presentation/pages/trade_page.dart';
 import 'profile/presentation/widgets/user_profile_drawer.dart';
 import 'sync/data/firestore_repository.dart';
 import 'sync/data/sync_queue_repository_impl.dart';
@@ -36,12 +41,10 @@ import 'sync/presentation/cubit/sync_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Initialize database
   final database = AppDatabase();
 
@@ -51,10 +54,7 @@ void main() async {
 class StickerCollectorApp extends StatelessWidget {
   final AppDatabase database;
 
-  const StickerCollectorApp({
-    super.key,
-    required this.database,
-  });
+  const StickerCollectorApp({super.key, required this.database});
 
   @override
   Widget build(BuildContext context) {
@@ -70,14 +70,17 @@ class StickerCollectorApp extends StatelessWidget {
         RepositoryProvider<FirebaseAuthService>.value(value: authService),
         RepositoryProvider<FirestoreRepository>.value(value: firestoreRepo),
         RepositoryProvider<SyncQueueRepositoryImpl>.value(value: syncQueueRepo),
-        RepositoryProvider<ConnectivityService>.value(value: connectivityService),
+        RepositoryProvider<ConnectivityService>.value(
+          value: connectivityService,
+        ),
+        RepositoryProvider<TradeRepositoryImpl>.value(
+          value: TradeRepositoryImpl(database),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
           // Auth cubit - handles authentication state
-          BlocProvider<AuthCubit>(
-            create: (context) => AuthCubit(authService),
-          ),
+          BlocProvider<AuthCubit>(create: (context) => AuthCubit(authService)),
           // Sync cubit - manages cloud sync
           BlocProvider<SyncCubit>(
             create: (context) => SyncCubit(
@@ -98,15 +101,14 @@ class StickerCollectorApp extends StatelessWidget {
             create: (context) {
               final collectionRepository = CollectionRepositoryImpl(database);
               final syncCubit = context.read<SyncCubit>();
-              final cubit = CollectionCubit(collectionRepository)..loadCollection();
+              final cubit = CollectionCubit(collectionRepository)
+                ..loadCollection();
               cubit.setSyncCubit(syncCubit);
               return cubit;
             },
           ),
           // Stats cubit - calculates statistics
-          BlocProvider<StatsCubit>(
-            create: (_) => StatsCubit(),
-          ),
+          BlocProvider<StatsCubit>(create: (_) => StatsCubit()),
           // PDF export cubit
           BlocProvider<PdfExportCubit>(
             create: (_) {
@@ -114,6 +116,17 @@ class StickerCollectorApp extends StatelessWidget {
               final pdfExportService = PdfExportService(pdfGenerator);
               return PdfExportCubit(pdfExportService);
             },
+          ),
+          // Trade cubit - manages QR trading
+          BlocProvider<TradeCubit>(
+            create: (context) {
+              final tradeRepository = TradeRepositoryImpl(database);
+              return TradeCubit(tradeRepository)..loadHistory();
+            },
+          ),
+          // Trade scanner cubit - manages QR scanning
+          BlocProvider<TradeScannerCubit>(
+            create: (_) => TradeScannerCubit(trade_usecases.ParseQRUseCase()),
           ),
         ],
         child: MaterialApp(
@@ -243,11 +256,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       endDrawer: const UserProfileDrawer(),
       body: IndexedStack(
         index: _currentIndex,
-        children: const [
-          _AlbumsTab(),
-          _StatsTab(),
-          _ExportTab(),
-        ],
+        children: const [_AlbumsTab(), _StatsTab(), _ExportTab(), TradePage()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -257,14 +266,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             icon: Icon(Icons.auto_stories),
             label: 'Albums',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Stats',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Stats'),
           BottomNavigationBarItem(
             icon: Icon(Icons.picture_as_pdf),
             label: 'Export',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.swap_horiz), label: 'Trade'),
         ],
       ),
     );
@@ -363,9 +370,7 @@ class _AlbumsTab extends StatelessWidget {
               }
 
               if (state.status == AlbumStatus.error) {
-                return Center(
-                  child: Text('Error: ${state.errorMessage}'),
-                );
+                return Center(child: Text('Error: ${state.errorMessage}'));
               }
 
               return AlbumListPage(
@@ -426,12 +431,14 @@ class _ExportTab extends StatelessWidget {
                   if (albumState.selectedSection != null &&
                       albumState.currentSectionStickers.isNotEmpty) {
                     for (final sticker in albumState.currentSectionStickers) {
-                      stickers.add(PdfStickerData(
-                        id: sticker.id,
-                        number: sticker.stickerNumber,
-                        name: sticker.name,
-                        sectionName: albumState.selectedSection!.name,
-                      ));
+                      stickers.add(
+                        PdfStickerData(
+                          id: sticker.id,
+                          number: sticker.stickerNumber,
+                          name: sticker.name,
+                          sectionName: albumState.selectedSection!.name,
+                        ),
+                      );
                     }
                   }
 
@@ -439,31 +446,34 @@ class _ExportTab extends StatelessWidget {
                     state: pdfState,
                     onExportFull: () {
                       context.read<PdfExportCubit>().generatePdf(
-                            albumName: albumState.selectedAlbum?.name ?? 'My Collection',
-                            sectionName: '',
-                            stickers: stickers,
-                            statusMap: collectionState.statusMap,
-                            filter: ExportFilter.full,
-                          );
+                        albumName:
+                            albumState.selectedAlbum?.name ?? 'My Collection',
+                        sectionName: '',
+                        stickers: stickers,
+                        statusMap: collectionState.statusMap,
+                        filter: ExportFilter.full,
+                      );
                     },
                     onExportMissing: () {
                       context.read<PdfExportCubit>().generatePdf(
-                            albumName: albumState.selectedAlbum?.name ?? 'My Collection',
-                            sectionName: 'Missing Stickers Only',
-                            stickers: stickers,
-                            statusMap: collectionState.statusMap,
-                            filter: ExportFilter.missingOnly,
-                          );
+                        albumName:
+                            albumState.selectedAlbum?.name ?? 'My Collection',
+                        sectionName: 'Missing Stickers Only',
+                        stickers: stickers,
+                        statusMap: collectionState.statusMap,
+                        filter: ExportFilter.missingOnly,
+                      );
                     },
                     onExportSection: () {
                       if (albumState.selectedSection != null) {
                         context.read<PdfExportCubit>().generatePdf(
-                              albumName: albumState.selectedAlbum?.name ?? 'My Collection',
-                              sectionName: albumState.selectedSection!.name,
-                              stickers: stickers,
-                              statusMap: collectionState.statusMap,
-                              filter: ExportFilter.section,
-                            );
+                          albumName:
+                              albumState.selectedAlbum?.name ?? 'My Collection',
+                          sectionName: albumState.selectedSection!.name,
+                          stickers: stickers,
+                          statusMap: collectionState.statusMap,
+                          filter: ExportFilter.section,
+                        );
                       }
                     },
                     onShare: () {

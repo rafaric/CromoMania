@@ -26,7 +26,7 @@ class AlbumDetailPage extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          color: AppTheme.primaryLight.withOpacity(0.1),
+          color: AppTheme.primaryLight.withValues(alpha: 0.1),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -1,10 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../auth/presentation/cubit/auth_cubit.dart';
-import '../../../auth/presentation/cubit/auth_state.dart';
-import '../../../sync/presentation/cubit/sync_cubit.dart';
-import '../../../sync/presentation/cubit/sync_state.dart';
-import '../widgets/sign_out_dialog.dart';
 import '../widgets/user_profile_drawer.dart';
 
 /// Profile page that wraps the user profile drawer

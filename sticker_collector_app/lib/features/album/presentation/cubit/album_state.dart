@@ -23,19 +23,28 @@ class AlbumState extends Equatable {
     this.sections = const [],
     this.selectedSection,
     this.currentSectionStickers = const [],
+    this.allStickers = const [],
     this.errorMessage,
   });
 
+  /// Get all sticker IDs from all sections of selected album
+  List<int> get allStickerIds {
+    return allStickers.map((s) => s.id).toList();
+  }
+
+  final List<Sticker> allStickers;
+
   @override
   List<Object?> get props => [
-        status,
-        albums,
-        selectedAlbum,
-        sections,
-        selectedSection,
-        currentSectionStickers,
-        errorMessage,
-      ];
+    status,
+    albums,
+    selectedAlbum,
+    sections,
+    selectedSection,
+    currentSectionStickers,
+    allStickers,
+    errorMessage,
+  ];
 
   AlbumState copyWith({
     AlbumStatus? status,
@@ -46,15 +55,22 @@ class AlbumState extends Equatable {
     Section? selectedSection,
     bool clearSelectedSection = false,
     List<Sticker>? currentSectionStickers,
+    List<Sticker>? allStickers,
     String? errorMessage,
   }) {
     return AlbumState(
       status: status ?? this.status,
       albums: albums ?? this.albums,
-      selectedAlbum: clearSelectedAlbum ? null : (selectedAlbum ?? this.selectedAlbum),
+      selectedAlbum: clearSelectedAlbum
+          ? null
+          : (selectedAlbum ?? this.selectedAlbum),
       sections: sections ?? this.sections,
-      selectedSection: clearSelectedSection ? null : (selectedSection ?? this.selectedSection),
-      currentSectionStickers: currentSectionStickers ?? this.currentSectionStickers,
+      selectedSection: clearSelectedSection
+          ? null
+          : (selectedSection ?? this.selectedSection),
+      currentSectionStickers:
+          currentSectionStickers ?? this.currentSectionStickers,
+      allStickers: allStickers ?? this.allStickers,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }

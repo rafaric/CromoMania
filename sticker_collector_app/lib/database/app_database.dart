@@ -8,11 +8,12 @@ import 'tables/sections_table.dart';
 import 'tables/stickers_table.dart';
 import 'tables/collection_status_table.dart';
 import 'tables/sync_queue_table.dart';
+import 'tables/trade_records_table.dart';
 
 part 'app_database.g.dart';
 
 /// Main application database using Drift
-@DriftDatabase(tables: [Albums, Sections, Stickers, CollectionStatuses, SyncQueueItems])
+@DriftDatabase(tables: [Albums, Sections, Stickers, CollectionStatuses, SyncQueueItems, TradeRecords])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -188,6 +189,31 @@ class AppDatabase extends _$AppDatabase {
         .getSingle();
     return result.read(syncQueueItems.id.count()) ?? 0;
   }
+
+  // ============== Trade Records Operations ==============
+
+  /// Insert a new trade record
+  Future<int> insertTradeRecord(TradeRecordsCompanion record) =>
+      into(tradeRecords).insert(record);
+
+  /// Get all trade records ordered by date (newest first)
+  Future<List<TradeRecord>> getAllTradeRecords() =>
+      (select(tradeRecords)..orderBy([(t) => OrderingTerm.desc(t.tradedAt)])).get();
+
+  /// Get recent trade records with limit
+  Future<List<TradeRecord>> getRecentTradeRecords({int limit = 10}) =>
+      (select(tradeRecords)
+            ..orderBy([(t) => OrderingTerm.desc(t.tradedAt)])
+            ..limit(limit))
+          .get();
+
+  /// Get a single trade record by ID
+  Future<TradeRecord?> getTradeRecordById(int id) =>
+      (select(tradeRecords)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  /// Delete trade records older than a given timestamp
+  Future<int> pruneOldTradeRecords(int cutoffTimestamp) =>
+      (delete(tradeRecords)..where((t) => t.tradedAt.isSmallerThanValue(cutoffTimestamp))).go();
 }
 
 LazyDatabase _openConnection() {

@@ -18,10 +18,9 @@ class SyncEngine {
   void Function(SyncEngineStatus)? onStatusChanged;
 
   SyncEngine({
-    required FirestoreRepository firestoreRepo,
-    required SyncQueueRepository syncQueueRepo,
-  })  : _firestoreRepo = firestoreRepo,
-        _syncQueueRepo = syncQueueRepo;
+    required this._firestoreRepo,
+    required this._syncQueueRepo,
+  });
 
   /// Initialize sync engine for a user
   Future<void> initialize(String userId) async {

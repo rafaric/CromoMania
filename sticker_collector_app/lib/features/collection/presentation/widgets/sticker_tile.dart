@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../album/domain/entities/sticker.dart';
 
 /// Sticker tile widget with tap/long-press state machine
@@ -36,7 +35,7 @@ class StickerTile extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),

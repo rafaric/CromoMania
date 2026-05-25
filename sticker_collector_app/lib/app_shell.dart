@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'auth/presentation/cubit/auth_cubit.dart';
 import 'auth/presentation/cubit/auth_state.dart';
 import 'auth/presentation/pages/auth_gate_page.dart';
-import 'sync/presentation/cubit/sync_cubit.dart';
 import 'profile/presentation/widgets/user_profile_drawer.dart';
 
 /// Main app shell with auth gate and profile drawer

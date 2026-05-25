@@ -1882,6 +1882,570 @@ class SyncQueueItemsCompanion extends UpdateCompanion<SyncQueueItem> {
   }
 }
 
+class $TradeRecordsTable extends TradeRecords
+    with TableInfo<$TradeRecordsTable, TradeRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TradeRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _partnerIdMeta = const VerificationMeta(
+    'partnerId',
+  );
+  @override
+  late final GeneratedColumn<String> partnerId = GeneratedColumn<String>(
+    'partner_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _partnerNameMeta = const VerificationMeta(
+    'partnerName',
+  );
+  @override
+  late final GeneratedColumn<String> partnerName = GeneratedColumn<String>(
+    'partner_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Anonymous'),
+  );
+  static const VerificationMeta _stickersGivenMeta = const VerificationMeta(
+    'stickersGiven',
+  );
+  @override
+  late final GeneratedColumn<int> stickersGiven = GeneratedColumn<int>(
+    'stickers_given',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _givenIdsMeta = const VerificationMeta(
+    'givenIds',
+  );
+  @override
+  late final GeneratedColumn<String> givenIds = GeneratedColumn<String>(
+    'given_ids',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stickersReceivedMeta = const VerificationMeta(
+    'stickersReceived',
+  );
+  @override
+  late final GeneratedColumn<int> stickersReceived = GeneratedColumn<int>(
+    'stickers_received',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _receivedIdsMeta = const VerificationMeta(
+    'receivedIds',
+  );
+  @override
+  late final GeneratedColumn<String> receivedIds = GeneratedColumn<String>(
+    'received_ids',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tradedAtMeta = const VerificationMeta(
+    'tradedAt',
+  );
+  @override
+  late final GeneratedColumn<int> tradedAt = GeneratedColumn<int>(
+    'traded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tradeTypeMeta = const VerificationMeta(
+    'tradeType',
+  );
+  @override
+  late final GeneratedColumn<String> tradeType = GeneratedColumn<String>(
+    'trade_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('qr_bidirectional'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    partnerId,
+    partnerName,
+    stickersGiven,
+    givenIds,
+    stickersReceived,
+    receivedIds,
+    tradedAt,
+    tradeType,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'trade_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TradeRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('partner_id')) {
+      context.handle(
+        _partnerIdMeta,
+        partnerId.isAcceptableOrUnknown(data['partner_id']!, _partnerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_partnerIdMeta);
+    }
+    if (data.containsKey('partner_name')) {
+      context.handle(
+        _partnerNameMeta,
+        partnerName.isAcceptableOrUnknown(
+          data['partner_name']!,
+          _partnerNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('stickers_given')) {
+      context.handle(
+        _stickersGivenMeta,
+        stickersGiven.isAcceptableOrUnknown(
+          data['stickers_given']!,
+          _stickersGivenMeta,
+        ),
+      );
+    }
+    if (data.containsKey('given_ids')) {
+      context.handle(
+        _givenIdsMeta,
+        givenIds.isAcceptableOrUnknown(data['given_ids']!, _givenIdsMeta),
+      );
+    }
+    if (data.containsKey('stickers_received')) {
+      context.handle(
+        _stickersReceivedMeta,
+        stickersReceived.isAcceptableOrUnknown(
+          data['stickers_received']!,
+          _stickersReceivedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('received_ids')) {
+      context.handle(
+        _receivedIdsMeta,
+        receivedIds.isAcceptableOrUnknown(
+          data['received_ids']!,
+          _receivedIdsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('traded_at')) {
+      context.handle(
+        _tradedAtMeta,
+        tradedAt.isAcceptableOrUnknown(data['traded_at']!, _tradedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tradedAtMeta);
+    }
+    if (data.containsKey('trade_type')) {
+      context.handle(
+        _tradeTypeMeta,
+        tradeType.isAcceptableOrUnknown(data['trade_type']!, _tradeTypeMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TradeRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TradeRecord(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      partnerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}partner_id'],
+      )!,
+      partnerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}partner_name'],
+      )!,
+      stickersGiven: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}stickers_given'],
+      )!,
+      givenIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}given_ids'],
+      ),
+      stickersReceived: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}stickers_received'],
+      )!,
+      receivedIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}received_ids'],
+      ),
+      tradedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}traded_at'],
+      )!,
+      tradeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trade_type'],
+      )!,
+    );
+  }
+
+  @override
+  $TradeRecordsTable createAlias(String alias) {
+    return $TradeRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class TradeRecord extends DataClass implements Insertable<TradeRecord> {
+  final int id;
+  final String partnerId;
+  final String partnerName;
+  final int stickersGiven;
+  final String? givenIds;
+  final int stickersReceived;
+  final String? receivedIds;
+  final int tradedAt;
+  final String tradeType;
+  const TradeRecord({
+    required this.id,
+    required this.partnerId,
+    required this.partnerName,
+    required this.stickersGiven,
+    this.givenIds,
+    required this.stickersReceived,
+    this.receivedIds,
+    required this.tradedAt,
+    required this.tradeType,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['partner_id'] = Variable<String>(partnerId);
+    map['partner_name'] = Variable<String>(partnerName);
+    map['stickers_given'] = Variable<int>(stickersGiven);
+    if (!nullToAbsent || givenIds != null) {
+      map['given_ids'] = Variable<String>(givenIds);
+    }
+    map['stickers_received'] = Variable<int>(stickersReceived);
+    if (!nullToAbsent || receivedIds != null) {
+      map['received_ids'] = Variable<String>(receivedIds);
+    }
+    map['traded_at'] = Variable<int>(tradedAt);
+    map['trade_type'] = Variable<String>(tradeType);
+    return map;
+  }
+
+  TradeRecordsCompanion toCompanion(bool nullToAbsent) {
+    return TradeRecordsCompanion(
+      id: Value(id),
+      partnerId: Value(partnerId),
+      partnerName: Value(partnerName),
+      stickersGiven: Value(stickersGiven),
+      givenIds: givenIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(givenIds),
+      stickersReceived: Value(stickersReceived),
+      receivedIds: receivedIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivedIds),
+      tradedAt: Value(tradedAt),
+      tradeType: Value(tradeType),
+    );
+  }
+
+  factory TradeRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TradeRecord(
+      id: serializer.fromJson<int>(json['id']),
+      partnerId: serializer.fromJson<String>(json['partnerId']),
+      partnerName: serializer.fromJson<String>(json['partnerName']),
+      stickersGiven: serializer.fromJson<int>(json['stickersGiven']),
+      givenIds: serializer.fromJson<String?>(json['givenIds']),
+      stickersReceived: serializer.fromJson<int>(json['stickersReceived']),
+      receivedIds: serializer.fromJson<String?>(json['receivedIds']),
+      tradedAt: serializer.fromJson<int>(json['tradedAt']),
+      tradeType: serializer.fromJson<String>(json['tradeType']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'partnerId': serializer.toJson<String>(partnerId),
+      'partnerName': serializer.toJson<String>(partnerName),
+      'stickersGiven': serializer.toJson<int>(stickersGiven),
+      'givenIds': serializer.toJson<String?>(givenIds),
+      'stickersReceived': serializer.toJson<int>(stickersReceived),
+      'receivedIds': serializer.toJson<String?>(receivedIds),
+      'tradedAt': serializer.toJson<int>(tradedAt),
+      'tradeType': serializer.toJson<String>(tradeType),
+    };
+  }
+
+  TradeRecord copyWith({
+    int? id,
+    String? partnerId,
+    String? partnerName,
+    int? stickersGiven,
+    Value<String?> givenIds = const Value.absent(),
+    int? stickersReceived,
+    Value<String?> receivedIds = const Value.absent(),
+    int? tradedAt,
+    String? tradeType,
+  }) => TradeRecord(
+    id: id ?? this.id,
+    partnerId: partnerId ?? this.partnerId,
+    partnerName: partnerName ?? this.partnerName,
+    stickersGiven: stickersGiven ?? this.stickersGiven,
+    givenIds: givenIds.present ? givenIds.value : this.givenIds,
+    stickersReceived: stickersReceived ?? this.stickersReceived,
+    receivedIds: receivedIds.present ? receivedIds.value : this.receivedIds,
+    tradedAt: tradedAt ?? this.tradedAt,
+    tradeType: tradeType ?? this.tradeType,
+  );
+  TradeRecord copyWithCompanion(TradeRecordsCompanion data) {
+    return TradeRecord(
+      id: data.id.present ? data.id.value : this.id,
+      partnerId: data.partnerId.present ? data.partnerId.value : this.partnerId,
+      partnerName: data.partnerName.present
+          ? data.partnerName.value
+          : this.partnerName,
+      stickersGiven: data.stickersGiven.present
+          ? data.stickersGiven.value
+          : this.stickersGiven,
+      givenIds: data.givenIds.present ? data.givenIds.value : this.givenIds,
+      stickersReceived: data.stickersReceived.present
+          ? data.stickersReceived.value
+          : this.stickersReceived,
+      receivedIds: data.receivedIds.present
+          ? data.receivedIds.value
+          : this.receivedIds,
+      tradedAt: data.tradedAt.present ? data.tradedAt.value : this.tradedAt,
+      tradeType: data.tradeType.present ? data.tradeType.value : this.tradeType,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TradeRecord(')
+          ..write('id: $id, ')
+          ..write('partnerId: $partnerId, ')
+          ..write('partnerName: $partnerName, ')
+          ..write('stickersGiven: $stickersGiven, ')
+          ..write('givenIds: $givenIds, ')
+          ..write('stickersReceived: $stickersReceived, ')
+          ..write('receivedIds: $receivedIds, ')
+          ..write('tradedAt: $tradedAt, ')
+          ..write('tradeType: $tradeType')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    partnerId,
+    partnerName,
+    stickersGiven,
+    givenIds,
+    stickersReceived,
+    receivedIds,
+    tradedAt,
+    tradeType,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TradeRecord &&
+          other.id == this.id &&
+          other.partnerId == this.partnerId &&
+          other.partnerName == this.partnerName &&
+          other.stickersGiven == this.stickersGiven &&
+          other.givenIds == this.givenIds &&
+          other.stickersReceived == this.stickersReceived &&
+          other.receivedIds == this.receivedIds &&
+          other.tradedAt == this.tradedAt &&
+          other.tradeType == this.tradeType);
+}
+
+class TradeRecordsCompanion extends UpdateCompanion<TradeRecord> {
+  final Value<int> id;
+  final Value<String> partnerId;
+  final Value<String> partnerName;
+  final Value<int> stickersGiven;
+  final Value<String?> givenIds;
+  final Value<int> stickersReceived;
+  final Value<String?> receivedIds;
+  final Value<int> tradedAt;
+  final Value<String> tradeType;
+  const TradeRecordsCompanion({
+    this.id = const Value.absent(),
+    this.partnerId = const Value.absent(),
+    this.partnerName = const Value.absent(),
+    this.stickersGiven = const Value.absent(),
+    this.givenIds = const Value.absent(),
+    this.stickersReceived = const Value.absent(),
+    this.receivedIds = const Value.absent(),
+    this.tradedAt = const Value.absent(),
+    this.tradeType = const Value.absent(),
+  });
+  TradeRecordsCompanion.insert({
+    this.id = const Value.absent(),
+    required String partnerId,
+    this.partnerName = const Value.absent(),
+    this.stickersGiven = const Value.absent(),
+    this.givenIds = const Value.absent(),
+    this.stickersReceived = const Value.absent(),
+    this.receivedIds = const Value.absent(),
+    required int tradedAt,
+    this.tradeType = const Value.absent(),
+  }) : partnerId = Value(partnerId),
+       tradedAt = Value(tradedAt);
+  static Insertable<TradeRecord> custom({
+    Expression<int>? id,
+    Expression<String>? partnerId,
+    Expression<String>? partnerName,
+    Expression<int>? stickersGiven,
+    Expression<String>? givenIds,
+    Expression<int>? stickersReceived,
+    Expression<String>? receivedIds,
+    Expression<int>? tradedAt,
+    Expression<String>? tradeType,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (partnerId != null) 'partner_id': partnerId,
+      if (partnerName != null) 'partner_name': partnerName,
+      if (stickersGiven != null) 'stickers_given': stickersGiven,
+      if (givenIds != null) 'given_ids': givenIds,
+      if (stickersReceived != null) 'stickers_received': stickersReceived,
+      if (receivedIds != null) 'received_ids': receivedIds,
+      if (tradedAt != null) 'traded_at': tradedAt,
+      if (tradeType != null) 'trade_type': tradeType,
+    });
+  }
+
+  TradeRecordsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? partnerId,
+    Value<String>? partnerName,
+    Value<int>? stickersGiven,
+    Value<String?>? givenIds,
+    Value<int>? stickersReceived,
+    Value<String?>? receivedIds,
+    Value<int>? tradedAt,
+    Value<String>? tradeType,
+  }) {
+    return TradeRecordsCompanion(
+      id: id ?? this.id,
+      partnerId: partnerId ?? this.partnerId,
+      partnerName: partnerName ?? this.partnerName,
+      stickersGiven: stickersGiven ?? this.stickersGiven,
+      givenIds: givenIds ?? this.givenIds,
+      stickersReceived: stickersReceived ?? this.stickersReceived,
+      receivedIds: receivedIds ?? this.receivedIds,
+      tradedAt: tradedAt ?? this.tradedAt,
+      tradeType: tradeType ?? this.tradeType,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (partnerId.present) {
+      map['partner_id'] = Variable<String>(partnerId.value);
+    }
+    if (partnerName.present) {
+      map['partner_name'] = Variable<String>(partnerName.value);
+    }
+    if (stickersGiven.present) {
+      map['stickers_given'] = Variable<int>(stickersGiven.value);
+    }
+    if (givenIds.present) {
+      map['given_ids'] = Variable<String>(givenIds.value);
+    }
+    if (stickersReceived.present) {
+      map['stickers_received'] = Variable<int>(stickersReceived.value);
+    }
+    if (receivedIds.present) {
+      map['received_ids'] = Variable<String>(receivedIds.value);
+    }
+    if (tradedAt.present) {
+      map['traded_at'] = Variable<int>(tradedAt.value);
+    }
+    if (tradeType.present) {
+      map['trade_type'] = Variable<String>(tradeType.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TradeRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('partnerId: $partnerId, ')
+          ..write('partnerName: $partnerName, ')
+          ..write('stickersGiven: $stickersGiven, ')
+          ..write('givenIds: $givenIds, ')
+          ..write('stickersReceived: $stickersReceived, ')
+          ..write('receivedIds: $receivedIds, ')
+          ..write('tradedAt: $tradedAt, ')
+          ..write('tradeType: $tradeType')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1891,6 +2455,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CollectionStatusesTable collectionStatuses =
       $CollectionStatusesTable(this);
   late final $SyncQueueItemsTable syncQueueItems = $SyncQueueItemsTable(this);
+  late final $TradeRecordsTable tradeRecords = $TradeRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1901,6 +2466,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stickers,
     collectionStatuses,
     syncQueueItems,
+    tradeRecords,
   ];
 }
 
@@ -2921,6 +3487,284 @@ typedef $$SyncQueueItemsTableProcessedTableManager =
       SyncQueueItem,
       PrefetchHooks Function()
     >;
+typedef $$TradeRecordsTableCreateCompanionBuilder =
+    TradeRecordsCompanion Function({
+      Value<int> id,
+      required String partnerId,
+      Value<String> partnerName,
+      Value<int> stickersGiven,
+      Value<String?> givenIds,
+      Value<int> stickersReceived,
+      Value<String?> receivedIds,
+      required int tradedAt,
+      Value<String> tradeType,
+    });
+typedef $$TradeRecordsTableUpdateCompanionBuilder =
+    TradeRecordsCompanion Function({
+      Value<int> id,
+      Value<String> partnerId,
+      Value<String> partnerName,
+      Value<int> stickersGiven,
+      Value<String?> givenIds,
+      Value<int> stickersReceived,
+      Value<String?> receivedIds,
+      Value<int> tradedAt,
+      Value<String> tradeType,
+    });
+
+class $$TradeRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $TradeRecordsTable> {
+  $$TradeRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partnerId => $composableBuilder(
+    column: $table.partnerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partnerName => $composableBuilder(
+    column: $table.partnerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stickersGiven => $composableBuilder(
+    column: $table.stickersGiven,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get givenIds => $composableBuilder(
+    column: $table.givenIds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stickersReceived => $composableBuilder(
+    column: $table.stickersReceived,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receivedIds => $composableBuilder(
+    column: $table.receivedIds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tradedAt => $composableBuilder(
+    column: $table.tradedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tradeType => $composableBuilder(
+    column: $table.tradeType,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TradeRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TradeRecordsTable> {
+  $$TradeRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partnerId => $composableBuilder(
+    column: $table.partnerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partnerName => $composableBuilder(
+    column: $table.partnerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stickersGiven => $composableBuilder(
+    column: $table.stickersGiven,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get givenIds => $composableBuilder(
+    column: $table.givenIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stickersReceived => $composableBuilder(
+    column: $table.stickersReceived,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get receivedIds => $composableBuilder(
+    column: $table.receivedIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tradedAt => $composableBuilder(
+    column: $table.tradedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tradeType => $composableBuilder(
+    column: $table.tradeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TradeRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TradeRecordsTable> {
+  $$TradeRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get partnerId =>
+      $composableBuilder(column: $table.partnerId, builder: (column) => column);
+
+  GeneratedColumn<String> get partnerName => $composableBuilder(
+    column: $table.partnerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stickersGiven => $composableBuilder(
+    column: $table.stickersGiven,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get givenIds =>
+      $composableBuilder(column: $table.givenIds, builder: (column) => column);
+
+  GeneratedColumn<int> get stickersReceived => $composableBuilder(
+    column: $table.stickersReceived,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get receivedIds => $composableBuilder(
+    column: $table.receivedIds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get tradedAt =>
+      $composableBuilder(column: $table.tradedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get tradeType =>
+      $composableBuilder(column: $table.tradeType, builder: (column) => column);
+}
+
+class $$TradeRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TradeRecordsTable,
+          TradeRecord,
+          $$TradeRecordsTableFilterComposer,
+          $$TradeRecordsTableOrderingComposer,
+          $$TradeRecordsTableAnnotationComposer,
+          $$TradeRecordsTableCreateCompanionBuilder,
+          $$TradeRecordsTableUpdateCompanionBuilder,
+          (
+            TradeRecord,
+            BaseReferences<_$AppDatabase, $TradeRecordsTable, TradeRecord>,
+          ),
+          TradeRecord,
+          PrefetchHooks Function()
+        > {
+  $$TradeRecordsTableTableManager(_$AppDatabase db, $TradeRecordsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TradeRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TradeRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TradeRecordsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> partnerId = const Value.absent(),
+                Value<String> partnerName = const Value.absent(),
+                Value<int> stickersGiven = const Value.absent(),
+                Value<String?> givenIds = const Value.absent(),
+                Value<int> stickersReceived = const Value.absent(),
+                Value<String?> receivedIds = const Value.absent(),
+                Value<int> tradedAt = const Value.absent(),
+                Value<String> tradeType = const Value.absent(),
+              }) => TradeRecordsCompanion(
+                id: id,
+                partnerId: partnerId,
+                partnerName: partnerName,
+                stickersGiven: stickersGiven,
+                givenIds: givenIds,
+                stickersReceived: stickersReceived,
+                receivedIds: receivedIds,
+                tradedAt: tradedAt,
+                tradeType: tradeType,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String partnerId,
+                Value<String> partnerName = const Value.absent(),
+                Value<int> stickersGiven = const Value.absent(),
+                Value<String?> givenIds = const Value.absent(),
+                Value<int> stickersReceived = const Value.absent(),
+                Value<String?> receivedIds = const Value.absent(),
+                required int tradedAt,
+                Value<String> tradeType = const Value.absent(),
+              }) => TradeRecordsCompanion.insert(
+                id: id,
+                partnerId: partnerId,
+                partnerName: partnerName,
+                stickersGiven: stickersGiven,
+                givenIds: givenIds,
+                stickersReceived: stickersReceived,
+                receivedIds: receivedIds,
+                tradedAt: tradedAt,
+                tradeType: tradeType,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TradeRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TradeRecordsTable,
+      TradeRecord,
+      $$TradeRecordsTableFilterComposer,
+      $$TradeRecordsTableOrderingComposer,
+      $$TradeRecordsTableAnnotationComposer,
+      $$TradeRecordsTableCreateCompanionBuilder,
+      $$TradeRecordsTableUpdateCompanionBuilder,
+      (
+        TradeRecord,
+        BaseReferences<_$AppDatabase, $TradeRecordsTable, TradeRecord>,
+      ),
+      TradeRecord,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2935,4 +3779,6 @@ class $AppDatabaseManager {
       $$CollectionStatusesTableTableManager(_db, _db.collectionStatuses);
   $$SyncQueueItemsTableTableManager get syncQueueItems =>
       $$SyncQueueItemsTableTableManager(_db, _db.syncQueueItems);
+  $$TradeRecordsTableTableManager get tradeRecords =>
+      $$TradeRecordsTableTableManager(_db, _db.tradeRecords);
 }

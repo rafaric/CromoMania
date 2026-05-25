@@ -32,7 +32,7 @@ class AlbumCard extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryLight.withOpacity(0.2),
+                  color: AppTheme.primaryLight.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(

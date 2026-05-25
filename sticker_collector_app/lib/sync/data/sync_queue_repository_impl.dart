@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 import '../../database/app_database.dart';
-import '../domain/sync_status.dart';
 
 /// Repository interface for sync queue operations
 abstract class SyncQueueRepository {
