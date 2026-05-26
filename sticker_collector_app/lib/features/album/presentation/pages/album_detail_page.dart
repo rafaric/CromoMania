@@ -27,7 +27,7 @@ class AlbumDetailPage extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [AppTheme.primaryColor, AppTheme.accentBlue],
@@ -36,9 +36,9 @@ class AlbumDetailPage extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryDark.withValues(alpha: 0.18),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
+                color: AppTheme.primaryDark.withValues(alpha: 0.14),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -46,10 +46,7 @@ class AlbumDetailPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(999),
@@ -59,30 +56,37 @@ class AlbumDetailPage extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
+                    fontSize: 12,
                     letterSpacing: 0.2,
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Text(
                 album.name,
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineMedium?.copyWith(color: Colors.white),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               if (album.description != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   album.description!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.25,
                   ),
                 ),
               ],
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _InfoPill(
                     icon: Icons.collections,
@@ -219,7 +223,7 @@ class _InfoPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
@@ -227,13 +231,14 @@ class _InfoPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.white),
-          const SizedBox(width: 6),
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 5),
           Text(
             label,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
+              fontSize: 12,
             ),
           ),
         ],
