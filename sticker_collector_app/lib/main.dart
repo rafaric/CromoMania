@@ -243,6 +243,11 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 0;
 
+  void _selectTab(int index) {
+    if (!mounted) return;
+    setState(() => _currentIndex = index);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -258,14 +263,14 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           ),
         ],
       ),
-      endDrawer: const UserProfileDrawer(),
+      endDrawer: UserProfileDrawer(onSelectTab: _selectTab),
       body: IndexedStack(
         index: _currentIndex,
         children: const [_AlbumsTab(), _StatsTab(), _ExportTab(), TradePage()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _selectTab,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.auto_stories),

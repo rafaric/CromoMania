@@ -10,7 +10,9 @@ import 'sign_out_dialog.dart';
 
 /// User profile drawer with avatar, info, sync status, and actions
 class UserProfileDrawer extends StatelessWidget {
-  const UserProfileDrawer({super.key});
+  final ValueChanged<int> onSelectTab;
+
+  const UserProfileDrawer({super.key, required this.onSelectTab});
 
   @override
   Widget build(BuildContext context) {
@@ -43,25 +45,28 @@ class UserProfileDrawer extends StatelessWidget {
             BlocBuilder<AuthCubit, AuthState>(
               builder: (context, authState) {
                 final user = authState.user;
-                
+
                 return Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
                       // Avatar
-                      _buildAvatar(context, user?.displayName ?? 'User', user?.photoUrl),
+                      _buildAvatar(
+                        context,
+                        user?.displayName ?? 'User',
+                        user?.photoUrl,
+                      ),
                       const SizedBox(height: 16),
-                      
+
                       // Display name
                       Text(
                         user?.displayName ?? 'User',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 4),
-                      
+
                       // Email
                       Text(
                         user?.email ?? '',
@@ -92,34 +97,28 @@ class UserProfileDrawer extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.settings),
-                    title: const Text('Settings'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      // TODO: Navigate to settings
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Settings coming soon')),
-                      );
-                    },
+                    leading: const Icon(Icons.bar_chart),
+                    title: const Text('Statistics'),
+                    subtitle: const Text('Open collection progress and totals'),
+                    onTap: () => _openTab(context, 1),
                   ),
                   ListTile(
                     leading: const Icon(Icons.picture_as_pdf),
                     title: const Text('Export Collection'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      // TODO: Navigate to export
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Export from profile drawer')),
-                      );
-                    },
+                    subtitle: const Text('Open PDF export options'),
+                    onTap: () => _openTab(context, 2),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.bar_chart),
-                    title: const Text('Statistics'),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      // TODO: Navigate to stats
-                    },
+                    leading: const Icon(Icons.swap_horiz),
+                    title: const Text('Trade'),
+                    subtitle: const Text('Open QR exchange tools'),
+                    onTap: () => _openTab(context, 3),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.sync),
+                    title: const Text('Sync Now'),
+                    subtitle: const Text('Retry pending cloud changes'),
+                    onTap: () => _syncNow(context),
                   ),
                 ],
               ),
@@ -150,6 +149,33 @@ class UserProfileDrawer extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _openTab(BuildContext context, int index) {
+    Navigator.of(context).pop();
+    onSelectTab(index);
+  }
+
+  Future<void> _syncNow(BuildContext context) async {
+    final authState = context.read<AuthCubit>().state;
+    final userId = authState.userId;
+
+    Navigator.of(context).pop();
+
+    if (userId == null || userId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No authenticated user to sync.')),
+      );
+      return;
+    }
+
+    await context.read<SyncCubit>().initialize(userId);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sync refresh started.')));
+    }
   }
 
   /// Build avatar with fallback to initials
@@ -256,9 +282,9 @@ class UserProfileDrawer extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${state.pendingCount} items pending',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ],
@@ -304,14 +330,14 @@ class UserProfileDrawer extends StatelessWidget {
   /// Handle sign out button press
   Future<void> _handleSignOut(BuildContext context) async {
     final confirmed = await SignOutDialog.show(context);
-    
+
     if (confirmed && context.mounted) {
       // Clear sync first
       context.read<SyncCubit>().clearSync();
-      
+
       // Then sign out
       context.read<AuthCubit>().signOut();
-      
+
       Navigator.of(context).pop();
     }
   }

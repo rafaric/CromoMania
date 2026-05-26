@@ -9,10 +9,7 @@ import 'profile/presentation/widgets/user_profile_drawer.dart';
 class AppShell extends StatelessWidget {
   final Widget child;
 
-  const AppShell({
-    super.key,
-    required this.child,
-  });
+  const AppShell({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +52,9 @@ class _AuthenticatedShell extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: _getColorForName(user?.displayName ?? 'User'),
+                    backgroundColor: _getColorForName(
+                      user?.displayName ?? 'User',
+                    ),
                     child: Text(
                       _getInitials(user?.displayName ?? 'User'),
                       style: const TextStyle(
@@ -71,7 +70,7 @@ class _AuthenticatedShell extends StatelessWidget {
           ),
         ],
       ),
-      drawer: const UserProfileDrawer(),
+      drawer: UserProfileDrawer(onSelectTab: (_) {}),
       body: child,
     );
   }

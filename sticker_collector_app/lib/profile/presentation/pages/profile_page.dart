@@ -15,7 +15,7 @@ class ProfilePage extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: const UserProfileDrawer(),
+      body: UserProfileDrawer(onSelectTab: (_) {}),
     );
   }
 }
