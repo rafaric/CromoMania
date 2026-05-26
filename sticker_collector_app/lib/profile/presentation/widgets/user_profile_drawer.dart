@@ -28,7 +28,7 @@ class UserProfileDrawer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Profile',
+                    'My Account',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   IconButton(
@@ -58,7 +58,6 @@ class UserProfileDrawer extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
 
-                      // Display name
                       Text(
                         user?.displayName ?? 'User',
                         style: Theme.of(context).textTheme.titleMedium
@@ -66,8 +65,6 @@ class UserProfileDrawer extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 4),
-
-                      // Email
                       Text(
                         user?.email ?? '',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -75,56 +72,73 @@ class UserProfileDrawer extends StatelessWidget {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'Google account connected',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
                     ],
                   ),
                 );
               },
             ),
 
-            const Divider(),
+            const Divider(height: 1),
 
-            // Sync status section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildSyncStatusCard(context),
-            ),
-
-            const Divider(),
-
-            // Action items
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.bar_chart),
-                    title: const Text('Statistics'),
-                    subtitle: const Text('Open collection progress and totals'),
+                  const _SectionLabel(title: 'Collection'),
+                  const SizedBox(height: 8),
+                  _DrawerActionTile(
+                    icon: Icons.bar_chart,
+                    title: 'Collection Stats',
+                    subtitle: 'See progress, missing, and repeated',
                     onTap: () => _openTab(context, 1),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.picture_as_pdf),
-                    title: const Text('Export Collection'),
-                    subtitle: const Text('Open PDF export options'),
+                  _DrawerActionTile(
+                    icon: Icons.picture_as_pdf,
+                    title: 'Export PDF',
+                    subtitle: 'Generate collection exports',
                     onTap: () => _openTab(context, 2),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.swap_horiz),
-                    title: const Text('Trade'),
-                    subtitle: const Text('Open QR exchange tools'),
+                  _DrawerActionTile(
+                    icon: Icons.swap_horiz,
+                    title: 'Trade Stickers',
+                    subtitle: 'Open QR exchange tools',
                     onTap: () => _openTab(context, 3),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.sync),
-                    title: const Text('Sync Now'),
-                    subtitle: const Text('Retry pending cloud changes'),
+                  const SizedBox(height: 20),
+                  const _SectionLabel(title: 'Sync'),
+                  const SizedBox(height: 8),
+                  _buildSyncStatusCard(context),
+                  const SizedBox(height: 10),
+                  _DrawerActionTile(
+                    icon: Icons.sync,
+                    title: 'Sync Now',
+                    subtitle: 'Retry pending cloud changes',
                     onTap: () => _syncNow(context),
                   ),
                 ],
               ),
             ),
 
-            const Divider(),
+            const Divider(height: 1),
 
             // Sign out button
             Padding(
@@ -340,5 +354,51 @@ class UserProfileDrawer extends StatelessWidget {
 
       Navigator.of(context).pop();
     }
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String title;
+
+  const _SectionLabel({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+        color: Colors.grey[600],
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.4,
+      ),
+    );
+  }
+}
+
+class _DrawerActionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _DrawerActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
   }
 }
