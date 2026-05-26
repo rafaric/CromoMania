@@ -142,10 +142,23 @@ class AlbumDetailPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      title: Text(
-                        group.name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              group.name,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          if (_CompletionBadgeData.fromPercent(stats.percent) !=
+                              null)
+                            _CompletionBadge(
+                              data: _CompletionBadgeData.fromPercent(
+                                stats.percent,
+                              )!,
+                            ),
+                        ],
                       ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 6),
@@ -329,6 +342,75 @@ class _ProgressStats {
       owned: owned,
       missing: total - owned,
       repeated: repeated,
+    );
+  }
+}
+
+class _CompletionBadgeData {
+  final String label;
+  final IconData icon;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  const _CompletionBadgeData({
+    required this.label,
+    required this.icon,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  static _CompletionBadgeData? fromPercent(double percent) {
+    final ratio = percent * 100;
+    if (ratio >= 100) {
+      return const _CompletionBadgeData(
+        label: 'Complete',
+        icon: Icons.workspace_premium,
+        backgroundColor: AppTheme.ownedBackgroundColor,
+        foregroundColor: AppTheme.ownedColor,
+      );
+    }
+    if (ratio >= 90) {
+      return const _CompletionBadgeData(
+        label: 'Almost',
+        icon: Icons.local_fire_department,
+        backgroundColor: AppTheme.repeatedBackgroundColor,
+        foregroundColor: AppTheme.repeatedColor,
+      );
+    }
+    return null;
+  }
+}
+
+class _CompletionBadge extends StatelessWidget {
+  final _CompletionBadgeData data;
+
+  const _CompletionBadge({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: data.backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: data.foregroundColor.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(data.icon, size: 14, color: data.foregroundColor),
+          const SizedBox(width: 4),
+          Text(
+            data.label,
+            style: TextStyle(
+              color: data.foregroundColor,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
