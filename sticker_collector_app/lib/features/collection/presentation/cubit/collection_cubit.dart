@@ -26,12 +26,23 @@ class CollectionCubit extends Cubit<CollectionState> {
     _syncCubit = syncCubit;
   }
 
+  /// Prepare state for an authenticated user before sync/restore completes.
+  void beginUserSession(String userId) {
+    _userId = userId;
+    emit(
+      state.copyWith(
+        status: CollectionStatus.loading,
+        statusMap: const {},
+        totalStickers: state.totalStickers > 0 ? state.totalStickers : 992,
+      ),
+    );
+  }
+
   /// Update user ID and refresh collection from cloud (call after sign in)
   void updateUserId() {
     final user = _auth.currentUser;
     if (user != null) {
       _userId = user.uid;
-      // Always refresh from cloud after auth resolves.
       loadCollectionFromCloud();
     }
   }
@@ -80,24 +91,30 @@ class CollectionCubit extends Cubit<CollectionState> {
 
       // Try to merge with cloud data if SyncCubit is available
       if (_syncCubit != null) {
+        final pendingSyncCount = await _syncCubit!.getPendingCountForUser(
+          _userId,
+        );
         final cloudMap = await _syncCubit!.loadCloudData(_userId);
+        final preferCloudValues = pendingSyncCount == 0;
 
-        // Merge: cloud wins for conflicts (last-write-wins)
         final mergedMap = Map<int, int>.from(localMap);
         for (final entry in cloudMap.entries) {
           final stickerId = int.tryParse(entry.key);
-          if (stickerId != null) {
+          if (stickerId == null) continue;
+
+          final hasLocalValue = mergedMap.containsKey(stickerId);
+          if (preferCloudValues || !hasLocalValue) {
             mergedMap[stickerId] = entry.value;
-            // Save to local for offline access
-            await _repository.saveStatus(
-              entity.CollectionStatus(
-                id: 0,
-                stickerId: stickerId,
-                userId: _userId,
-                count: entry.value,
-              ),
-            );
           }
+
+          await _repository.saveStatus(
+            entity.CollectionStatus(
+              id: 0,
+              stickerId: stickerId,
+              userId: _userId,
+              count: mergedMap[stickerId] ?? entry.value,
+            ),
+          );
         }
         emit(
           state.copyWith(

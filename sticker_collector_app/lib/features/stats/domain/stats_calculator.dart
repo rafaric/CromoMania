@@ -9,7 +9,7 @@ class StatsCalculator {
     required Map<int, int> statusMap,
     required int totalStickers,
   }) {
-    if (statusMap.isEmpty || totalStickers == 0) {
+    if (totalStickers == 0) {
       return const StatsData(
         ownedCount: 0,
         missingCount: 0,

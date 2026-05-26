@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/constants/app_constants.dart';
 import '../data/firestore_repository.dart';
 import '../data/sync_queue_repository_impl.dart';
 
@@ -48,7 +49,7 @@ class SyncEngine {
     await _syncQueueRepo.addToQueue(
       stickerId: stickerId,
       operation: 'upsert',
-      payload: jsonEncode(data),
+      payload: jsonEncode({...data, 'userId': _currentUserId}),
     );
 
     if (_isOnline && !_isSyncing) {
@@ -81,9 +82,21 @@ class SyncEngine {
 
         try {
           if (operation == 'upsert') {
-            final decoded = jsonDecode(payload);
-            final data = Map<String, dynamic>.from(decoded as Map)
-              ..['syncedAt'] = DateTime.now().toIso8601String();
+            final data = _deserializePayload(payload, stickerId);
+            final payloadUserId = data['userId'] as String?;
+            final isLegacyUnscopedItem = payloadUserId == null;
+            final belongsToCurrentUser = payloadUserId == _currentUserId;
+
+            if (isLegacyUnscopedItem &&
+                _currentUserId != AppConstants.defaultUserId) {
+              continue;
+            }
+
+            if (!isLegacyUnscopedItem && !belongsToCurrentUser) {
+              continue;
+            }
+
+            data['syncedAt'] = DateTime.now().toIso8601String();
             await _firestoreRepo.upsertSticker(
               _currentUserId!,
               stickerId,
@@ -107,8 +120,8 @@ class SyncEngine {
       // Clean up processed items
       await _syncQueueRepo.cleanupProcessed();
 
-      // Check if there are still pending items
-      final remainingCount = await _syncQueueRepo.getPendingCount();
+      // Check if there are still pending items for the current user
+      final remainingCount = await _getCurrentUserPendingCount();
       if (remainingCount == 0) {
         _updateStatus(SyncEngineStatus.synced);
       } else {
@@ -119,16 +132,75 @@ class SyncEngine {
     } finally {
       _isSyncing = false;
 
+      final currentUserPendingCount = await _getCurrentUserPendingCount();
       final shouldProcessAgain =
           _isOnline &&
-          (_hasQueuedChangesWhileSyncing ||
-              await _syncQueueRepo.getPendingCount() > 0);
+          (_hasQueuedChangesWhileSyncing || currentUserPendingCount > 0);
       _hasQueuedChangesWhileSyncing = false;
 
       if (shouldProcessAgain) {
         await _processQueue();
       }
     }
+  }
+
+  Map<String, dynamic> _deserializePayload(
+    String payload,
+    String stickerId,
+  ) {
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {
+      // Fall through to legacy payload parsing.
+    }
+
+    final countMatch = RegExp(r'count:\s*(\d+)').firstMatch(payload);
+    final updatedAtMatch = RegExp(r'updatedAt:\s*([^,}\n]+)').firstMatch(
+      payload,
+    );
+    final legacyStickerIdMatch = RegExp(
+      r'stickerId:\s*(\d+)',
+    ).firstMatch(payload);
+
+    return {
+      'stickerId': int.tryParse(legacyStickerIdMatch?.group(1) ?? stickerId) ??
+          int.parse(stickerId),
+      'count': int.tryParse(countMatch?.group(1) ?? '0') ?? 0,
+      'updatedAt': updatedAtMatch?.group(1)?.trim() ??
+          DateTime.now().toIso8601String(),
+      'migratedFromLegacyQueue': true,
+      'userId': null,
+    };
+  }
+
+  Future<int> _getCurrentUserPendingCount() async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      return 0;
+    }
+
+    final pendingItems = await _syncQueueRepo.getPendingItems();
+    return pendingItems.where((item) {
+      final payload = item['payload'] as String?;
+      if (payload == null || payload.isEmpty) {
+        return false;
+      }
+
+      try {
+        final decoded = jsonDecode(payload);
+        if (decoded is Map<String, dynamic>) {
+          final payloadUserId = decoded['userId'] as String?;
+          return payloadUserId == currentUserId;
+        }
+      } catch (_) {
+        return currentUserId == AppConstants.defaultUserId;
+      }
+
+      return false;
+    }).length;
   }
 
   /// Handle remote changes from Firestore

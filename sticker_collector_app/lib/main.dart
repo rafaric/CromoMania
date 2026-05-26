@@ -135,10 +135,16 @@ class StickerCollectorApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           debugShowCheckedModeBanner: false,
           home: BlocListener<AuthCubit, AuthState>(
-            listener: (context, authState) {
-              // When user authenticates, update CollectionCubit
+            listener: (context, authState) async {
               if (authState.status == AuthStateStatus.authenticated) {
+                final userId = authState.userId;
+                if (userId == null || userId.isEmpty) return;
+
+                final syncCubit = context.read<SyncCubit>();
                 final collectionCubit = context.read<CollectionCubit>();
+
+                collectionCubit.beginUserSession(userId);
+                await syncCubit.initialize(userId);
                 collectionCubit.updateUserId();
               }
             },
@@ -172,9 +178,6 @@ class AuthGate extends StatelessWidget {
 
         // Authenticated - show main app
         if (state.status == AuthStateStatus.authenticated) {
-          // Initialize sync for the authenticated user
-          context.read<SyncCubit>().initialize(state.userId ?? '');
-
           return const MainNavigationPage();
         }
 

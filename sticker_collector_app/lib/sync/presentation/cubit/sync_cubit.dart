@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../core/constants/app_constants.dart';
 import '../../domain/sync_status.dart';
 import '../../domain/sync_engine.dart';
 import '../../data/sync_queue_repository_impl.dart';
@@ -138,6 +140,32 @@ class SyncCubit extends Cubit<SyncState> {
     }
 
     return null;
+  }
+
+  Future<int> getPendingCount() async {
+    return _syncQueueRepo.getPendingCount();
+  }
+
+  Future<int> getPendingCountForUser(String userId) async {
+    final pendingItems = await _syncQueueRepo.getPendingItems();
+    return pendingItems.where((item) {
+      final payload = item['payload'] as String?;
+      if (payload == null || payload.isEmpty) {
+        return false;
+      }
+
+      try {
+        final decoded = jsonDecode(payload);
+        if (decoded is Map<String, dynamic>) {
+          final payloadUserId = decoded['userId'] as String?;
+          return payloadUserId == userId;
+        }
+      } catch (_) {
+        return userId == AppConstants.defaultUserId;
+      }
+
+      return false;
+    }).length;
   }
 
   /// Set online status
