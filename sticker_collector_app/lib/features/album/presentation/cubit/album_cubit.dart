@@ -79,6 +79,22 @@ class AlbumCubit extends Cubit<AlbumState> {
       }
 
       final teams = await _repository.getTeamsForGroup(album.id, groupId);
+
+      if (!group.hasExplicitTeams && teams.isNotEmpty) {
+        final team = teams.first;
+        final stickers = await _repository.getStickersForTeam(team.id);
+        emit(
+          state.copyWith(
+            status: AlbumStatus.loaded,
+            clearSelectedGroup: true,
+            teams: const [],
+            selectedTeam: team,
+            currentTeamStickers: stickers,
+          ),
+        );
+        return;
+      }
+
       emit(
         state.copyWith(
           status: AlbumStatus.loaded,

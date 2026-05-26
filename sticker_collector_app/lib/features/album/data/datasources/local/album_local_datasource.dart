@@ -118,6 +118,7 @@ class AlbumLocalDataSource {
             name: groupName,
             orderIndex: groupIndex,
             teams: teams,
+            hasExplicitTeams: true,
           ),
         );
         continue;
@@ -147,6 +148,7 @@ class AlbumLocalDataSource {
                   .toList(),
             ),
           ],
+          hasExplicitTeams: false,
         ),
       );
     }
@@ -196,12 +198,13 @@ class AlbumLocalDataSource {
         albumId: albumId,
         name: group.name,
         orderIndex: group.orderIndex,
-        teamCount: teams.length,
+        teamCount: group.hasExplicitTeams ? teams.length : 0,
         stickerCount: teams.fold<int>(
           0,
           (sum, team) => sum + team.stickerCount,
         ),
         stickerIds: [for (final team in teams) ...team.stickerIds],
+        hasExplicitTeams: group.hasExplicitTeams,
       );
     }).toList();
   }
@@ -316,12 +319,14 @@ class _SeedGroup {
   final String name;
   final int orderIndex;
   final List<_SeedTeam> teams;
+  final bool hasExplicitTeams;
 
   const _SeedGroup({
     required this.id,
     required this.name,
     required this.orderIndex,
     required this.teams,
+    required this.hasExplicitTeams,
   });
 }
 

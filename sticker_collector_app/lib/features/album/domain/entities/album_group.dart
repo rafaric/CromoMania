@@ -9,6 +9,7 @@ class AlbumGroup extends Equatable {
   final int teamCount;
   final int stickerCount;
   final List<int> stickerIds;
+  final bool hasExplicitTeams;
 
   const AlbumGroup({
     required this.id,
@@ -18,6 +19,7 @@ class AlbumGroup extends Equatable {
     required this.teamCount,
     required this.stickerCount,
     this.stickerIds = const [],
+    this.hasExplicitTeams = true,
   });
 
   @override
@@ -29,5 +31,6 @@ class AlbumGroup extends Equatable {
     teamCount,
     stickerCount,
     stickerIds,
+    hasExplicitTeams,
   ];
 }

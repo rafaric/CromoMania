@@ -196,16 +196,23 @@ class _LoadingScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 100,
-              height: 100,
+              width: 110,
+              height: 110,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.collections_bookmark,
-                size: 48,
                 color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryDark.withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Image.asset('assets/logo.jpg', fit: BoxFit.cover),
               ),
             ),
             const SizedBox(height: 24),
@@ -238,22 +245,16 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('CromoManía 2026'),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
         actions: [
           Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.account_circle),
+              tooltip: 'Profile',
               onPressed: () => Scaffold.of(context).openEndDrawer(),
             ),
           ),
         ],
       ),
-      drawer: const UserProfileDrawer(),
       endDrawer: const UserProfileDrawer(),
       body: IndexedStack(
         index: _currentIndex,

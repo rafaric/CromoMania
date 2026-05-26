@@ -169,13 +169,18 @@ class AlbumDetailPage extends StatelessWidget {
                               spacing: 8,
                               runSpacing: 8,
                               children: [
+                                if (group.hasExplicitTeams)
+                                  _CountBadge(
+                                    icon: Icons.groups_2,
+                                    label: '${group.teamCount} teams',
+                                  ),
                                 _CountBadge(
-                                  icon: Icons.groups_2,
-                                  label: '${group.teamCount} teams',
-                                ),
-                                _CountBadge(
-                                  icon: Icons.style,
-                                  label: '${group.stickerCount} stickers',
+                                  icon: group.hasExplicitTeams
+                                      ? Icons.style
+                                      : Icons.folder,
+                                  label: group.hasExplicitTeams
+                                      ? '${group.stickerCount} stickers'
+                                      : 'Special category',
                                 ),
                                 _CountBadge(
                                   icon: Icons.search_off,
