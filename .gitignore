@@ -1,2 +1,6 @@
 # Local Pi runtime state
 .atl/
+
+# Local artifacts not tracked in git
+checklist-album-panini-mundial-2026.pdf
+nul
