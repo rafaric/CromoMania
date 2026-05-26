@@ -26,12 +26,12 @@ class CollectionCubit extends Cubit<CollectionState> {
     _syncCubit = syncCubit;
   }
 
-  /// Update user ID (call after sign in)
+  /// Update user ID and refresh collection from cloud (call after sign in)
   void updateUserId() {
     final user = _auth.currentUser;
-    if (user != null && user.uid != _userId) {
+    if (user != null) {
       _userId = user.uid;
-      // Load collection from cloud first, then merge with local
+      // Always refresh from cloud after auth resolves.
       loadCollectionFromCloud();
     }
   }
@@ -49,13 +49,11 @@ class CollectionCubit extends Cubit<CollectionState> {
       for (final status in statuses) {
         statusMap[status.stickerId] = status.count;
       }
-      final totalStickers = statusMap.length;
-
       emit(
         state.copyWith(
           status: CollectionStatus.loaded,
           statusMap: statusMap,
-          totalStickers: totalStickers,
+          totalStickers: state.totalStickers > 0 ? state.totalStickers : 992,
         ),
       );
     } catch (e) {
@@ -105,7 +103,7 @@ class CollectionCubit extends Cubit<CollectionState> {
           state.copyWith(
             status: CollectionStatus.loaded,
             statusMap: mergedMap,
-            totalStickers: mergedMap.length,
+            totalStickers: state.totalStickers > 0 ? state.totalStickers : 992,
           ),
         );
       } else {
@@ -114,7 +112,7 @@ class CollectionCubit extends Cubit<CollectionState> {
           state.copyWith(
             status: CollectionStatus.loaded,
             statusMap: localMap,
-            totalStickers: localMap.length,
+            totalStickers: state.totalStickers > 0 ? state.totalStickers : 992,
           ),
         );
       }

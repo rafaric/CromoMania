@@ -13,7 +13,16 @@ import 'tables/trade_records_table.dart';
 part 'app_database.g.dart';
 
 /// Main application database using Drift
-@DriftDatabase(tables: [Albums, Sections, Stickers, CollectionStatuses, SyncQueueItems, TradeRecords])
+@DriftDatabase(
+  tables: [
+    Albums,
+    Sections,
+    Stickers,
+    CollectionStatuses,
+    SyncQueueItems,
+    TradeRecords,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -48,8 +57,7 @@ class AppDatabase extends _$AppDatabase {
   Future<int> countAlbums() => select(albums).get().then((r) => r.length);
 
   /// Insert album and return ID
-  Future<int> insertAlbum(AlbumsCompanion album) =>
-      into(albums).insert(album);
+  Future<int> insertAlbum(AlbumsCompanion album) => into(albums).insert(album);
 
   // ============== Section Operations ==============
 
@@ -94,7 +102,8 @@ class AppDatabase extends _$AppDatabase {
       into(stickers).insert(sticker);
 
   /// Count all stickers
-  Future<int> countAllStickers() => select(stickers).get().then((r) => r.length);
+  Future<int> countAllStickers() =>
+      select(stickers).get().then((r) => r.length);
 
   // ============== Collection Status Operations ==============
 
@@ -110,28 +119,45 @@ class AppDatabase extends _$AppDatabase {
 
   /// Get status for a specific sticker
   Future<CollectionStatuse?> getStatusForSticker(
-      int stickerId, String userId) =>
-      (select(collectionStatuses)
-            ..where((c) =>
-                c.stickerId.equals(stickerId) & c.userId.equals(userId)))
+    int stickerId,
+    String userId,
+  ) =>
+      (select(collectionStatuses)..where(
+            (c) => c.stickerId.equals(stickerId) & c.userId.equals(userId),
+          ))
           .getSingleOrNull();
 
-  /// Insert or update collection status
-  Future<int> upsertCollectionStatus(CollectionStatusesCompanion status) =>
-      into(collectionStatuses).insertOnConflictUpdate(status);
+  /// Insert or update collection status by (stickerId, userId)
+  Future<int> upsertCollectionStatus(CollectionStatusesCompanion status) {
+    return into(collectionStatuses).insert(
+      status,
+      onConflict: DoUpdate(
+        (old) => CollectionStatusesCompanion(
+          count: status.count,
+          userId: status.userId,
+          stickerId: status.stickerId,
+        ),
+        target: [collectionStatuses.stickerId, collectionStatuses.userId],
+      ),
+    );
+  }
 
   /// Initialize default statuses for all stickers
   Future<void> initializeDefaultStatuses(
-      String userId, List<int> stickerIds) async {
+    String userId,
+    List<int> stickerIds,
+  ) async {
     await batch((batch) {
       batch.insertAll(
         collectionStatuses,
         stickerIds
-            .map((id) => CollectionStatusesCompanion(
-                  stickerId: Value(id),
-                  userId: Value(userId),
-                  count: const Value(0),
-                ))
+            .map(
+              (id) => CollectionStatusesCompanion(
+                stickerId: Value(id),
+                userId: Value(userId),
+                count: const Value(0),
+              ),
+            )
             .toList(),
         mode: InsertMode.insertOrIgnore,
       );
@@ -152,12 +178,14 @@ class AppDatabase extends _$AppDatabase {
 
   /// Mark a sync item as processed
   Future<bool> markSyncItemProcessed(int id) {
-    return (update(syncQueueItems)..where((s) => s.id.equals(id))).write(
-      SyncQueueItemsCompanion(
-        status: const Value('processed'),
-        processedAt: Value(DateTime.now()),
-      ),
-    ).then((rows) => rows > 0);
+    return (update(syncQueueItems)..where((s) => s.id.equals(id)))
+        .write(
+          SyncQueueItemsCompanion(
+            status: const Value('processed'),
+            processedAt: Value(DateTime.now()),
+          ),
+        )
+        .then((rows) => rows > 0);
   }
 
   /// Increment retry count for a sync item
@@ -170,11 +198,9 @@ class AppDatabase extends _$AppDatabase {
 
   /// Mark a sync item as failed
   Future<bool> markSyncItemFailed(int id) {
-    return (update(syncQueueItems)..where((s) => s.id.equals(id))).write(
-      const SyncQueueItemsCompanion(
-        status: Value('failed'),
-      ),
-    ).then((rows) => rows > 0);
+    return (update(syncQueueItems)..where((s) => s.id.equals(id)))
+        .write(const SyncQueueItemsCompanion(status: Value('failed')))
+        .then((rows) => rows > 0);
   }
 
   /// Delete processed sync items (cleanup)
@@ -183,10 +209,11 @@ class AppDatabase extends _$AppDatabase {
 
   /// Get count of pending sync items
   Future<int> getPendingSyncCount() async {
-    final result = await (selectOnly(syncQueueItems)
-          ..where(syncQueueItems.status.equals('pending'))
-          ..addColumns([syncQueueItems.id.count()]))
-        .getSingle();
+    final result =
+        await (selectOnly(syncQueueItems)
+              ..where(syncQueueItems.status.equals('pending'))
+              ..addColumns([syncQueueItems.id.count()]))
+            .getSingle();
     return result.read(syncQueueItems.id.count()) ?? 0;
   }
 
@@ -197,8 +224,9 @@ class AppDatabase extends _$AppDatabase {
       into(tradeRecords).insert(record);
 
   /// Get all trade records ordered by date (newest first)
-  Future<List<TradeRecord>> getAllTradeRecords() =>
-      (select(tradeRecords)..orderBy([(t) => OrderingTerm.desc(t.tradedAt)])).get();
+  Future<List<TradeRecord>> getAllTradeRecords() => (select(
+    tradeRecords,
+  )..orderBy([(t) => OrderingTerm.desc(t.tradedAt)])).get();
 
   /// Get recent trade records with limit
   Future<List<TradeRecord>> getRecentTradeRecords({int limit = 10}) =>
@@ -212,8 +240,9 @@ class AppDatabase extends _$AppDatabase {
       (select(tradeRecords)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   /// Delete trade records older than a given timestamp
-  Future<int> pruneOldTradeRecords(int cutoffTimestamp) =>
-      (delete(tradeRecords)..where((t) => t.tradedAt.isSmallerThanValue(cutoffTimestamp))).go();
+  Future<int> pruneOldTradeRecords(int cutoffTimestamp) => (delete(
+    tradeRecords,
+  )..where((t) => t.tradedAt.isSmallerThanValue(cutoffTimestamp))).go();
 }
 
 LazyDatabase _openConnection() {

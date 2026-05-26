@@ -394,11 +394,14 @@ class _AlbumsTab extends StatelessWidget {
           body: BlocBuilder<CollectionCubit, CollectionState>(
             builder: (context, collectionState) {
               // Update stats when collection changes
+              final albumTotal =
+                  state.selectedAlbum?.totalStickers ??
+                  (state.albums.isNotEmpty
+                      ? state.albums.first.totalStickers
+                      : 992);
               context.read<StatsCubit>().updateFromCollection(
                 statusMap: collectionState.statusMap,
-                totalStickers: collectionState.totalStickers > 0
-                    ? collectionState.totalStickers
-                    : (state.selectedAlbum?.totalStickers ?? 992),
+                totalStickers: albumTotal,
               );
 
               if (state.status == AlbumStatus.loading) {
@@ -434,9 +437,28 @@ class _StatsTab extends StatelessWidget {
         title: const Text('My Collection Stats'),
         automaticallyImplyLeading: false,
       ),
-      body: BlocBuilder<StatsCubit, StatsState>(
-        builder: (context, state) {
-          return StatsDashboardPage(stats: state);
+      body: BlocBuilder<AlbumCubit, AlbumState>(
+        builder: (context, albumState) {
+          return BlocBuilder<CollectionCubit, CollectionState>(
+            builder: (context, collectionState) {
+              final albumTotal =
+                  albumState.selectedAlbum?.totalStickers ??
+                  (albumState.albums.isNotEmpty
+                      ? albumState.albums.first.totalStickers
+                      : collectionState.totalStickers);
+
+              context.read<StatsCubit>().updateFromCollection(
+                statusMap: collectionState.statusMap,
+                totalStickers: albumTotal,
+              );
+
+              return BlocBuilder<StatsCubit, StatsState>(
+                builder: (context, statsState) {
+                  return StatsDashboardPage(stats: statsState);
+                },
+              );
+            },
+          );
         },
       ),
     );

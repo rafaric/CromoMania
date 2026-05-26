@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/sync_status.dart';
 import '../../domain/sync_engine.dart';
@@ -69,11 +71,9 @@ class SyncCubit extends Cubit<SyncState> {
 
   /// Queue a change for sync
   Future<void> queueChange(String stickerId, Map<String, dynamic> data) async {
-    print('SyncCubit: queueChange called for sticker $stickerId');
     await _syncEngine.queueChange(stickerId, data);
     await _updatePendingCount();
 
-    // Show syncing status if not already
     if (state.status != SyncStatus.syncing) {
       emit(state.copyWith(status: SyncStatus.syncing));
     }
@@ -85,28 +85,59 @@ class SyncCubit extends Cubit<SyncState> {
     emit(state.copyWith(pendingCount: count));
   }
 
-  /// Load cloud data from Firestore and return as Map<stickerId, count>
-  /// Call this after login to restore collection from cloud
+  /// Load cloud data from Firestore and return a stickerId-to-count map.
+  /// Call this after login to restore collection from cloud.
   Future<Map<String, int>> loadCloudData(String userId) async {
     try {
       final cloudStickers = await _firestoreRepo.getAllStickers(userId);
-
-      // Convert to Map<stickerId (String), count>
       final result = <String, int>{};
+
       for (final entry in cloudStickers.entries) {
-        // The stickerId might be stored as string or int
         final stickerId = entry.key;
         final data = entry.value as Map<String, dynamic>?;
-        if (data != null && data.containsKey('count')) {
-          result[stickerId] = data['count'] as int? ?? 0;
+        if (data == null) continue;
+
+        final count = _extractCount(data);
+        if (count != null) {
+          result[stickerId] = count;
         }
       }
 
       return result;
-    } catch (e) {
-      print('SyncCubit: Error loading cloud data: $e');
+    } catch (_) {
       return {};
     }
+  }
+
+  int? _extractCount(Map<String, dynamic> data) {
+    final directCount = data['count'];
+    if (directCount is int) return directCount;
+    if (directCount is num) return directCount.toInt();
+
+    final payload = data['payload'];
+    if (payload is Map<String, dynamic>) {
+      final nestedCount = payload['count'];
+      if (nestedCount is int) return nestedCount;
+      if (nestedCount is num) return nestedCount.toInt();
+    }
+
+    if (payload is String) {
+      try {
+        final decoded = jsonDecode(payload);
+        if (decoded is Map<String, dynamic>) {
+          final nestedCount = decoded['count'];
+          if (nestedCount is int) return nestedCount;
+          if (nestedCount is num) return nestedCount.toInt();
+        }
+      } catch (_) {
+        final match = RegExp(r'count:\s*(\d+)').firstMatch(payload);
+        if (match != null) {
+          return int.tryParse(match.group(1)!);
+        }
+      }
+    }
+
+    return null;
   }
 
   /// Set online status
