@@ -16,6 +16,16 @@ class TradeScannerPage extends StatefulWidget {
 class _TradeScannerPageState extends State<TradeScannerPage> {
   MobileScannerController? _controller;
   bool _torchEnabled = false;
+  bool _scannerVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final cubit = context.read<TradeScannerCubit>();
+    if (cubit.state.status != TradeScannerStatus.idle) {
+      cubit.reset();
+    }
+  }
 
   @override
   void dispose() {
@@ -27,17 +37,26 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
   Widget build(BuildContext context) {
     return BlocConsumer<TradeScannerCubit, TradeScannerState>(
       listener: (context, state) {
-        if (state.status == TradeScannerStatus.parsed && state.scannedData != null) {
+        if (state.status == TradeScannerStatus.parsed &&
+            state.scannedData != null) {
+          final scannerCubit = context.read<TradeScannerCubit>();
           // Navigate to confirmation page
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => TradeConfirmationPage(
-                scannedData: state.scannedData!,
-              ),
-            ),
-          );
+          Navigator.of(context)
+              .push(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      TradeConfirmationPage(scannedData: state.scannedData!),
+                ),
+              )
+              .then((_) {
+                if (mounted) {
+                  scannerCubit.reset();
+                }
+              });
         } else if (state.status == TradeScannerStatus.expired) {
-          _showErrorSnackBar('This QR code has expired. Ask your friend to generate a new one.');
+          _showErrorSnackBar(
+            'This QR code has expired. Ask your friend to generate a new one.',
+          );
           context.read<TradeScannerCubit>().reset();
         } else if (state.status == TradeScannerStatus.invalid) {
           _showErrorSnackBar(state.errorMessage ?? 'Invalid QR code');
@@ -49,7 +68,8 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
           appBar: AppBar(
             title: const Text('Scan QR Code'),
             actions: [
-              if (_controller != null && state.status == TradeScannerStatus.scanning)
+              if (_controller != null &&
+                  state.status == TradeScannerStatus.scanning)
                 IconButton(
                   icon: Icon(_torchEnabled ? Icons.flash_on : Icons.flash_off),
                   onPressed: () {
@@ -72,14 +92,13 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
       case TradeScannerStatus.idle:
         return _buildIdleState(context);
       case TradeScannerStatus.requestingPermission:
-        return _buildRequestingPermissionState();
-      case TradeScannerStatus.permissionDenied:
-        return _buildPermissionDeniedState(context);
       case TradeScannerStatus.scanning:
       case TradeScannerStatus.parsed:
       case TradeScannerStatus.expired:
       case TradeScannerStatus.invalid:
         return _buildScannerView(context);
+      case TradeScannerStatus.permissionDenied:
+        return _buildPermissionDeniedState(context);
     }
   }
 
@@ -88,42 +107,15 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.qr_code_scanner,
-            size: 64,
-            color: Colors.grey,
-          ),
+          const Icon(Icons.qr_code_scanner, size: 64, color: Colors.grey),
           const SizedBox(height: 16),
-          const Text(
-            'Ready to scan QR codes',
-            style: TextStyle(fontSize: 18),
-          ),
+          const Text('Ready to scan QR codes', style: TextStyle(fontSize: 18)),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () {
-              _controller = MobileScannerController(
-                detectionSpeed: DetectionSpeed.normal,
-                facing: CameraFacing.back,
-              );
-              context.read<TradeScannerCubit>().requestPermission();
-              setState(() {});
-            },
+            onPressed: () => _openCamera(context),
             icon: const Icon(Icons.camera_alt),
             label: const Text('Open Camera'),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequestingPermissionState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Requesting camera permission...'),
         ],
       ),
     );
@@ -136,11 +128,7 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.no_photography,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.no_photography, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             const Text(
               'Camera access needed to scan QR codes',
@@ -149,13 +137,7 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
-                context.read<TradeScannerCubit>().onPermissionGranted();
-                _controller = MobileScannerController(
-                  detectionSpeed: DetectionSpeed.normal,
-                  facing: CameraFacing.back,
-                );
-              },
+              onPressed: () => _openCamera(context),
               child: const Text('Try Again'),
             ),
           ],
@@ -165,10 +147,18 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
   }
 
   Widget _buildScannerView(BuildContext context) {
-    _controller ??= MobileScannerController(
-      detectionSpeed: DetectionSpeed.normal,
-      facing: CameraFacing.back,
-    );
+    if (!_scannerVisible || _controller == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Requesting camera permission...'),
+          ],
+        ),
+      );
+    }
 
     return Stack(
       children: [
@@ -178,7 +168,9 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
             final barcodes = capture.barcodes;
             for (final barcode in barcodes) {
               if (barcode.rawValue != null) {
-                context.read<TradeScannerCubit>().onQRScanned(barcode.rawValue!);
+                context.read<TradeScannerCubit>().onQRScanned(
+                  barcode.rawValue!,
+                );
                 break;
               }
             }
@@ -200,16 +192,54 @@ class _TradeScannerPageState extends State<TradeScannerPage> {
               ),
               child: const Text(
                 'Point camera at QR code',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ),
         ),
       ],
     );
+  }
+
+  void _openCamera(BuildContext context) {
+    _controller?.dispose();
+    _controller = MobileScannerController(
+      autoStart: false,
+      detectionSpeed: DetectionSpeed.normal,
+      facing: CameraFacing.back,
+    );
+
+    context.read<TradeScannerCubit>().requestPermission();
+
+    setState(() {
+      _scannerVisible = true;
+      _torchEnabled = false;
+    });
+
+    _startScanner(context);
+  }
+
+  Future<void> _startScanner(BuildContext context) async {
+    final controller = _controller;
+    if (controller == null) return;
+
+    final scannerCubit = context.read<TradeScannerCubit>();
+
+    try {
+      await controller.start();
+
+      if (!mounted) return;
+
+      if (controller.value.error?.errorCode ==
+          MobileScannerErrorCode.permissionDenied) {
+        scannerCubit.onPermissionDenied();
+      } else {
+        scannerCubit.onPermissionGranted();
+      }
+    } on MobileScannerException {
+      if (!mounted) return;
+      scannerCubit.onPermissionDenied();
+    }
   }
 
   Widget _buildScannerOverlay(BuildContext context) {
@@ -267,7 +297,12 @@ class _ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(cutoutRect.left, cutoutRect.top + cornerLength)
         ..lineTo(cutoutRect.left, cutoutRect.top + cornerRadius)
-        ..quadraticBezierTo(cutoutRect.left, cutoutRect.top, cutoutRect.left + cornerRadius, cutoutRect.top)
+        ..quadraticBezierTo(
+          cutoutRect.left,
+          cutoutRect.top,
+          cutoutRect.left + cornerRadius,
+          cutoutRect.top,
+        )
         ..lineTo(cutoutRect.left + cornerLength, cutoutRect.top),
       bracketPaint,
     );
@@ -277,7 +312,12 @@ class _ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(cutoutRect.right - cornerLength, cutoutRect.top)
         ..lineTo(cutoutRect.right - cornerRadius, cutoutRect.top)
-        ..quadraticBezierTo(cutoutRect.right, cutoutRect.top, cutoutRect.right, cutoutRect.top + cornerRadius)
+        ..quadraticBezierTo(
+          cutoutRect.right,
+          cutoutRect.top,
+          cutoutRect.right,
+          cutoutRect.top + cornerRadius,
+        )
         ..lineTo(cutoutRect.right, cutoutRect.top + cornerLength),
       bracketPaint,
     );
@@ -287,7 +327,12 @@ class _ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(cutoutRect.left, cutoutRect.bottom - cornerLength)
         ..lineTo(cutoutRect.left, cutoutRect.bottom - cornerRadius)
-        ..quadraticBezierTo(cutoutRect.left, cutoutRect.bottom, cutoutRect.left + cornerRadius, cutoutRect.bottom)
+        ..quadraticBezierTo(
+          cutoutRect.left,
+          cutoutRect.bottom,
+          cutoutRect.left + cornerRadius,
+          cutoutRect.bottom,
+        )
         ..lineTo(cutoutRect.left + cornerLength, cutoutRect.bottom),
       bracketPaint,
     );
@@ -297,7 +342,12 @@ class _ScannerOverlayPainter extends CustomPainter {
       Path()
         ..moveTo(cutoutRect.right - cornerLength, cutoutRect.bottom)
         ..lineTo(cutoutRect.right - cornerRadius, cutoutRect.bottom)
-        ..quadraticBezierTo(cutoutRect.right, cutoutRect.bottom, cutoutRect.right, cutoutRect.bottom - cornerRadius)
+        ..quadraticBezierTo(
+          cutoutRect.right,
+          cutoutRect.bottom,
+          cutoutRect.right,
+          cutoutRect.bottom - cornerRadius,
+        )
         ..lineTo(cutoutRect.right, cutoutRect.bottom - cornerLength),
       bracketPaint,
     );
